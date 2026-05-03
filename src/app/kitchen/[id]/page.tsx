@@ -42,7 +42,7 @@ export default function KitchenDetailPage() {
       toast.error('Select a plan first');
       return;
     }
-    router.push(`/checkout?kitchenId=${kitchen.id}&plan=${selectedPlan}`);
+    router.push(`/checkout?kitchenId=${kitchen?.id}&plan=${selectedPlan}`);
   }
 
   return (
