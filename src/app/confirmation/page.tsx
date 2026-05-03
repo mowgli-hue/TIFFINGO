@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Home, Sparkles } from 'lucide-react';
 import Link from 'next/link';
@@ -10,7 +10,7 @@ import clsx from 'clsx';
 
 const GOALS = ['Lose weight', 'Build muscle', 'Eat healthier', 'Diabetic-friendly', 'High protein', 'Low carb', 'Vegan', 'Halal only'];
 
-export default function ConfirmationPage() {
+function ConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const kitchenId = searchParams.get('kitchenId') ?? '';
@@ -175,5 +175,13 @@ export default function ConfirmationPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmationPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><p className="text-[#888780]">Loading...</p></div>}>
+      <ConfirmationPage />
+    </Suspense>
   );
 }
