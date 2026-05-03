@@ -1,6 +1,6 @@
 import { useState, Suspense } from 'react';
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MapPin, Check } from 'lucide-react';
 import { useCart } from '@/store/cart';
@@ -18,7 +18,7 @@ const PAYMENT_METHODS = [
   { id: 'new', label: 'Add new card', sub: 'Credit or debit', icon: '+' },
 ];
 
-export default function CheckoutPage() {
+function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const kitchenId = searchParams.get('kitchenId') ?? '';
@@ -212,5 +212,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><p className="text-[#888780]">Loading...</p></div>}>
+      <CheckoutPage />
+    </Suspense>
   );
 }

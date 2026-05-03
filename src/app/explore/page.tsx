@@ -9,7 +9,7 @@ import clsx from 'clsx';
 
 const SORT_OPTIONS = ['Recommended', 'Highest rated', 'Fastest delivery', 'Price: low to high'];
 
-export default function ExplorePage() {
+function ExplorePage() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
 
@@ -117,5 +117,13 @@ export default function ExplorePage() {
 
       <NavBar />
     </div>
+  );
+}
+
+export default function ExplorePageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><p className="text-[#888780]">Loading...</p></div>}>
+      <ExplorePage />
+    </Suspense>
   );
 }
