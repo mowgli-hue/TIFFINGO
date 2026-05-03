@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -36,7 +37,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const userMessage = meals
-      ? `Current week plan:\n${meals.map((m: { day: string; name: string; kitchen: string; protein: string }) => `${m.day}: ${m.name} (${m.kitchen}, ${m.protein} protein)`).join('\n')}\n\nUser request: ${message}`
+      ? `Current week plan:
+${meals.map((m: { day: string; name: string; kitchen: string; protein: string }) => `${m.day}: ${m.name} (${m.kitchen}, ${m.protein} protein)`).join('
+')}
+
+User request: ${message}`
       : message;
 
     const response = await client.messages.create({
