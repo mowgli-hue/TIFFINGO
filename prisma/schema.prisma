@@ -1,0 +1,152 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  phone         String?
+  passwordHash  String
+  address       String?
+  city          String?
+  postalCode    String?
+  stripeId      String?
+  goals         String[]       // e.g. ["High protein", "Halal only"]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  subscriptions Subscription[]
+  reviews       Review[]
+}
+
+model Kitchen {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  cuisine     String
+  type        String    // "tiffin" | "restaurant"
+  address     String
+  city        String
+  lat         Float?
+  lng         Float?
+  imageUrl    String?
+  rating      Float     @default(0)
+  reviewCount Int       @default(0)
+  isOpen      Boolean   @default(true)
+  isHalal     Boolean   @default(false)
+  isVeg       Boolean   @default(false)
+  commissionPct Float   @default(10)
+  createdAt   DateTime  @default(now())
+  menuItems   MenuItem[]
+  orders      Order[]
+  subscriptions Subscription[]
+  reviews     Review[]
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  kitchenId   String
+  kitchen     Kitchen  @relation(fields: [kitchenId], references: [id])
+  name        String
+  description String?
+  price       Float
+  calories    Int?
+  protein     Int?
+  imageUrl    String?
+  isAvailable Boolean  @default(true)
+  tags        String[] // e.g. ["Halal", "High protein"]
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  kitchenId    String
+  kitchen      Kitchen     @relation(fields: [kitchenId], references: [id])
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float
+  deliveryFee  Float       @default(0)
+  address      String
+  driverName   String?
+  driverPhone  String?
+  driverLat    Float?
+  driverLng    Float?
+  estimatedEta DateTime?
+  stripePaymentId String?
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int      @default(1)
+  price      Float
+}
+
+model Subscription {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id])
+  kitchenId      String
+  kitchen        Kitchen          @relation(fields: [kitchenId], references: [id])
+  plan           SubscriptionPlan
+  status         SubStatus        @default(ACTIVE)
+  mealsPerWeek   Int
+  pricePerWeek   Float
+  deliveryDays   String[]         // ["Mon","Wed","Fri"]
+  deliveryTime   String           // "12:00-13:00"
+  stripeSubId    String?
+  nextBillingDate DateTime?
+  startDate      DateTime         @default(now())
+  cancelledAt    DateTime?
+  createdAt      DateTime         @default(now())
+  orders         Order[]
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  kitchenId String
+  kitchen   Kitchen  @relation(fields: [kitchenId], references: [id])
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+enum SubscriptionPlan {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SubStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
