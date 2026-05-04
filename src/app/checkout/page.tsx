@@ -3,7 +3,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MapPin, Check } from 'lucide-react';
 import { useCart } from '@/store/cart';
-import { MOCK_KITCHENS, DELIVERY_DAYS } from '@/lib/mock-data';
+import { MOCK_KITCHENS, DELIVERY_SLOTS } from '@/lib/mock-data';
 import { PLANS } from '@/lib/stripe';
 import PlanCard from '@/components/PlanCard';
 import { toast } from 'react-hot-toast';
@@ -129,7 +129,7 @@ function CheckoutPage() {
 
             <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
             <div className="flex gap-1.5">
-              {DELIVERY_DAYS.map(({ day, time }) => (
+              {DELIVERY_SLOTS.map(({ day, time }) => (
                 <button
                   key={day}
                   onClick={() => {
