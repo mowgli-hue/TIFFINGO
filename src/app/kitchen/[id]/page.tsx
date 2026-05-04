@@ -1,236 +1,197 @@
 'use client';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Star, Heart, Clock, MapPin, Plus, Check } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import NavBar from '@/components/NavBar';
-import PlanCard from '@/components/PlanCard';
-import CartDrawer from '@/components/CartDrawer';
-import { MOCK_KITCHENS, MOCK_MENU_ITEMS } from '@/lib/mock-data';
+import { MOCK_KITCHENS, WEEKLY_MEALS, isPastCutoff, hoursUntilCutoff } from '@/lib/mock-data';
 import { useCart } from '@/store/cart';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 
-const TABS = ['Today\'s menu', 'Weekly plan', 'Reviews'] as const;
-
-export default function KitchenDetailPage() {
+export default function KitchenPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const kitchen = MOCK_KITCHENS.find(k => k.id === id);
-  const menuItems = MOCK_MENU_ITEMS[id] ?? [];
-
-  const { addItem, items, selectedPlan, setPlan } = useCart();
-  const [activeTab, setActiveTab] = useState<typeof TABS[number]>('Today\'s menu');
-  const [cartOpen, setCartOpen] = useState(false);
+  const meals = WEEKLY_MEALS[id] ?? [];
+  const { setMealOrder } = useCart();
   const [liked, setLiked] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(meals[0]?.day ?? 'Mon');
+  const [selectedSlot, setSelectedSlot] = useState(kitchen?.deliverySlots[0] ?? '12:00pm');
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const pastCutoff = isPastCutoff();
+  const hoursLeft = hoursUntilCutoff();
+  const selectedMeal = meals.find(m => m.day === selectedDay) ?? meals[0];
 
   if (!kitchen) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-[#888780]">Kitchen not found</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FDF8F3' }}>
+      <p className="text-[#9A8A7A]">Kitchen not found</p>
     </div>
   );
 
-  const cartCount = items.reduce((s, i) => s + i.quantity, 0);
-
-  function handleAdd(item: typeof menuItems[0]) {
-    addItem({ menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }, kitchen!.id, kitchen!.name);
-    toast.success(`${item.name} added`);
-    setCartOpen(true);
+  function handleOrderSingle() {
+    if (!selectedMeal) return;
+    router.push(`/checkout?kitchenId=${kitchen!.id}&day=${selectedDay}&weekly=false`);
   }
 
-  function handleSubscribe() {
-    if (!selectedPlan) {
-      toast.error('Select a plan first');
-      return;
-    }
-    router.push(`/checkout?kitchenId=${kitchen?.id}&plan=${selectedPlan}`);
+  function handleOrderWeekly() {
+    router.push(`/checkout?kitchenId=${kitchen!.id}&weekly=true`);
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-32">
+    <div className="min-h-screen pb-32" style={{ background: '#FDF8F3' }}>
+
       {/* ── Hero ── */}
-      <div className={clsx('h-44 flex items-center justify-center text-5xl relative', kitchen.type === 'tiffin' ? 'bg-[#E1F5EE]' : 'bg-[#FAEEDA]')}>
-        <span>🍛</span>
+      <div className="relative" style={{ background: 'linear-gradient(135deg, #C8522A, #A03E1A)', minHeight: 200 }}>
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)', backgroundSize: '16px 16px' }} />
 
-        {/* Back */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-12 left-4 w-8 h-8 bg-white rounded-full border border-[#E8E5DE] flex items-center justify-center"
-        >
-          <ArrowLeft size={14} className="text-[#2C2C2A]" />
-        </button>
-
-        {/* Like */}
-        <button
-          onClick={() => setLiked(!liked)}
-          className="absolute top-12 right-4 w-8 h-8 bg-white rounded-full border border-[#E8E5DE] flex items-center justify-center"
-        >
-          <Heart size={14} className={liked ? 'fill-red-500 text-red-500' : 'text-[#2C2C2A]'} />
-        </button>
-
-        {/* Bottom badges */}
-        <div className="absolute bottom-3 left-4 flex gap-2">
-          {kitchen.type === 'tiffin' && (
-            <span className="bg-[#1D9E75] text-white text-[10px] font-medium px-2.5 py-0.5 rounded-full">Meal plan</span>
-          )}
-          {kitchen.isOpen
-            ? <span className="bg-white text-[#5F5E5A] text-[10px] font-medium px-2.5 py-0.5 rounded-full border border-[#E8E5DE]">Open now</span>
-            : <span className="bg-white text-[#D85A30] text-[10px] font-medium px-2.5 py-0.5 rounded-full border border-[#E8E5DE]">Closed</span>
-          }
-        </div>
-
-        {/* Cart badge */}
-        {cartCount > 0 && (
-          <button
-            onClick={() => setCartOpen(true)}
-            className="absolute top-12 right-14 bg-[#1D9E75] text-white text-[11px] font-medium px-3 py-1 rounded-full"
-          >
-            {cartCount} in cart
+        {/* Back + like */}
+        <div className="flex items-center justify-between px-5 pt-14 pb-4 relative z-10">
+          <button onClick={() => router.back()} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <ArrowLeft size={15} className="text-white" />
           </button>
-        )}
-      </div>
-
-      {/* ── Info ── */}
-      <div className="px-5 pt-4 pb-3">
-        <h1 className="font-serif text-[22px] text-[#2C2C2A] mb-1">{kitchen.name}</h1>
-        <div className="flex flex-wrap items-center gap-2 mb-2 text-[11px] text-[#5F5E5A]">
-          <span className="flex items-center gap-1"><Star size={11} className="fill-amber-400 text-amber-400" />{kitchen.rating} ({kitchen.reviewCount})</span>
-          <span className="text-[#D3D1C7]">·</span>
-          <span>{kitchen.type === 'tiffin' ? 'Home kitchen' : 'Restaurant'}</span>
-          <span className="text-[#D3D1C7]">·</span>
-          <span className="flex items-center gap-1"><Clock size={11} />{kitchen.deliveryTime}</span>
+          <button onClick={() => setLiked(!liked)} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <Heart size={15} className={liked ? 'fill-red-400 text-red-400' : 'text-white'} />
+          </button>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {kitchen.isHalal && <span className="badge-green">Halal</span>}
-          {kitchen.isVeg && <span className="badge-green">Vegetarian</span>}
-          <span className="badge-green">{kitchen.cuisine}</span>
-        </div>
-      </div>
 
-      <div className="border-t border-[#E8E5DE]" />
-
-      {/* ── Subscription plans ── */}
-      {kitchen.type === 'tiffin' && (
-        <>
-          <div className="px-5 py-4">
-            <p className="text-[12px] font-medium text-[#888780] tracking-wider mb-3">SUBSCRIBE &amp; SAVE</p>
-            <div className="flex gap-2.5">
-              {(['DAILY', 'WEEKLY', 'MONTHLY'] as const).map(plan => (
-                <PlanCard key={plan} plan={plan} selected={selectedPlan === plan} onSelect={setPlan} />
-              ))}
-            </div>
+        {/* Kitchen info */}
+        <div className="px-5 pb-6 relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            {kitchen.isHalal && <span className="text-[9px] font-medium bg-white/20 text-white px-2 py-0.5 rounded-full">Halal</span>}
+            {kitchen.isVeg && <span className="text-[9px] font-medium bg-white/20 text-white px-2 py-0.5 rounded-full">Vegetarian</span>}
+            <span className="text-[9px] font-medium bg-white/20 text-white px-2 py-0.5 rounded-full">{kitchen.cuisine}</span>
           </div>
-          <div className="border-t border-[#E8E5DE]" />
-        </>
-      )}
-
-      {/* ── Tabs ── */}
-      <div className="flex border-b border-[#E8E5DE]">
-        {TABS.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={clsx(
-              'flex-1 py-2.5 text-[12px] font-medium border-b-2 transition-all',
-              activeTab === tab
-                ? 'text-[#2C2C2A] border-[#2C2C2A]'
-                : 'text-[#888780] border-transparent'
-            )}
-          >
-            {tab}
-          </button>
-        ))}
+          <h1 className="font-serif text-[26px] text-white mb-0.5">{kitchen.name}</h1>
+          <p className="text-[13px] text-orange-100 italic mb-3">"{kitchen.tagline}"</p>
+          <div className="flex items-center gap-3 text-[11px] text-orange-200">
+            <span className="flex items-center gap-1"><Star size={11} className="fill-yellow-300 text-yellow-300" />{kitchen.rating} ({kitchen.reviewCount})</span>
+            <span>·</span>
+            <span className="flex items-center gap-1"><Clock size={11} />Cutoff {kitchen.cutoffTime}</span>
+          </div>
+        </div>
       </div>
 
-      {/* ── Menu ── */}
-      {activeTab === "Today's menu" && (
-        <div className="px-5 py-3 space-y-0">
-          {menuItems.map((item, i) => (
-            <div key={item.id} className={clsx('flex items-center gap-3 py-3.5', i < menuItems.length - 1 && 'border-b border-[#F1EFE8]')}>
-              <div className={clsx('w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0', i % 3 === 0 ? 'bg-[#E1F5EE]' : i % 3 === 1 ? 'bg-[#FAEEDA]' : 'bg-[#F1EFE8]')}>
-                {item.tags.includes('Vegetarian') ? '🥘' : item.tags.includes('High protein') ? '🍗' : '🍛'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-[#2C2C2A] mb-0.5">{item.name}</p>
-                <p className="text-[11px] text-[#888780] mb-1.5 truncate">{item.description}</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-medium text-[#2C2C2A]">${item.price.toFixed(2)}</span>
-                  {item.protein && (
-                    <span className="text-[10px] text-[#1D9E75] bg-[#E1F5EE] px-1.5 py-0.5 rounded-full">{item.protein}g protein</span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => handleAdd(item)}
-                className="w-8 h-8 rounded-full bg-[#2C2C2A] flex items-center justify-center flex-shrink-0"
+      {/* ── Cutoff timer ── */}
+      {!pastCutoff && (
+        <div className="mx-5 -mt-3 bg-[#2C1810] rounded-2xl px-4 py-3 flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-yellow-300" />
+            <p className="text-[12px] text-white">Order by <span className="text-yellow-300 font-medium">8pm tonight</span> for tomorrow</p>
+          </div>
+          <span className="text-[11px] font-medium text-orange-300">{hoursLeft}h left</span>
+        </div>
+      )}
+
+      {/* ── Weekly meal calendar ── */}
+      <div className="px-5 mt-4">
+        <h2 className="font-serif text-[17px] text-[#2C1810] mb-3">This week's meals</h2>
+
+        <div className="space-y-2.5">
+          {meals.map((meal, i) => {
+            const isSelected = selectedDay === meal.day;
+            const isExpanded = expandedDay === meal.day;
+            return (
+              <div
+                key={meal.day}
+                className={clsx('bg-white rounded-2xl border transition-all overflow-hidden', isSelected ? 'border-[#C8522A]' : 'border-[#E8DDD0]')}
+                style={isSelected ? { boxShadow: '0 0 0 1px #C8522A20' } : {}}
               >
-                <Plus size={15} className="text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+                <button
+                  className="w-full flex items-center gap-3 p-3.5 text-left"
+                  onClick={() => { setSelectedDay(meal.day); setExpandedDay(isExpanded ? null : meal.day); }}
+                >
+                  {/* Day pill */}
+                  <div className={clsx('w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0', isSelected ? 'text-white' : 'bg-[#F5EDE4]')} style={isSelected ? { background: '#C8522A' } : {}}>
+                    <span className={clsx('text-[9px] font-medium', isSelected ? 'text-orange-200' : 'text-[#9A8A7A]')}>{meal.day}</span>
+                    <span className={clsx('text-[8px]', isSelected ? 'text-orange-200' : 'text-[#B4A494]')}>{meal.date}</span>
+                  </div>
 
-      {activeTab === 'Weekly plan' && (
-        <div className="px-5 py-6 text-center">
-          <p className="text-[14px] font-medium text-[#2C2C2A] mb-1">Weekly menu rotates</p>
-          <p className="text-[12px] text-[#888780]">Subscribe to see your personalised weekly meal schedule</p>
-          <button
-            onClick={() => { setPlan('WEEKLY'); setActiveTab("Today's menu"); }}
-            className="mt-4 bg-[#1D9E75] text-white px-6 py-2.5 rounded-xl text-[13px] font-medium"
-          >
-            Choose a plan
-          </button>
-        </div>
-      )}
+                  {/* Emoji */}
+                  <span className="text-2xl flex-shrink-0">{meal.emoji}</span>
 
-      {activeTab === 'Reviews' && (
-        <div className="px-5 py-4 space-y-4">
-          {[
-            { name: 'Priya S.', rating: 5, text: 'Best tiffin I\'ve had in Vancouver. Tastes exactly like home cooking.', date: '2 days ago' },
-            { name: 'Rahul M.', rating: 5, text: 'Subscribed weekly. Dal makhani is outstanding. Driver always on time.', date: '1 week ago' },
-            { name: 'Simran K.', rating: 4, text: 'Really good food and great value. Love the subscription model.', date: '2 weeks ago' },
-          ].map((r, i) => (
-            <div key={i} className="border-b border-[#F1EFE8] pb-4">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[13px] font-medium text-[#2C2C2A]">{r.name}</p>
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: r.rating }).map((_, j) => (
-                    <Star key={j} size={11} className="fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-[#2C1810] mb-0.5">{meal.name}</p>
+                    <p className="text-[10px] text-[#9A8A7A]">{meal.protein} protein · {meal.calories} cal</p>
+                  </div>
+
+                  {/* Price + expand */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[13px] font-medium text-[#2C1810]">${kitchen.pricePerMeal}</span>
+                    {isExpanded ? <ChevronUp size={14} className="text-[#9A8A7A]" /> : <ChevronDown size={14} className="text-[#9A8A7A]" />}
+                  </div>
+                </button>
+
+                {/* Expanded details */}
+                {isExpanded && (
+                  <div className="px-3.5 pb-3.5 border-t border-[#F5EDE4]">
+                    <p className="text-[12px] text-[#7A6A5A] leading-relaxed mt-2.5 mb-3">{meal.description}</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {meal.tags.map(tag => (
+                        <span key={tag} className="text-[9px] font-medium px-2 py-0.5 rounded-full" style={{ background: '#FFF0E6', color: '#C8522A' }}>{tag}</span>
+                      ))}
+                    </div>
+                    {/* Delivery slot */}
+                    <p className="text-[10px] font-medium text-[#9A8A7A] tracking-wider mb-1.5">DELIVERY SLOT</p>
+                    <div className="flex gap-2">
+                      {kitchen.deliverySlots.map(slot => (
+                        <button
+                          key={slot}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={clsx('flex-1 py-2 rounded-xl text-[11px] font-medium border transition-all', selectedSlot === slot ? 'text-white border-[#C8522A]' : 'bg-[#F5EDE4] text-[#7A6A5A] border-transparent')}
+                          style={selectedSlot === slot ? { background: '#C8522A' } : {}}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-[12px] text-[#5F5E5A] mb-1">{r.text}</p>
-              <p className="text-[10px] text-[#B4B2A9]">{r.date}</p>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Weekly package card ── */}
+      <div className="mx-5 mt-4 bg-[#2C1810] rounded-2xl p-4">
+        <p className="text-[9px] font-medium text-yellow-300 tracking-wider mb-1.5">WEEKLY PACKAGE</p>
+        <p className="text-[15px] font-medium text-white mb-1">All 5 meals · ${kitchen.weeklyPrice}</p>
+        <p className="text-[11px] text-orange-300 mb-3">Save {kitchen.weeklySavingsPct}% vs individual orders · Free delivery</p>
+        <div className="flex gap-1.5 mb-3">
+          {meals.map(m => (
+            <div key={m.day} className="flex-1 bg-white/10 rounded-xl py-2 text-center">
+              <p className="text-[9px] text-orange-300">{m.day}</p>
+              <p className="text-[14px]">{m.emoji}</p>
             </div>
           ))}
         </div>
-      )}
+        <button onClick={handleOrderWeekly} className="w-full py-3 bg-[#C8522A] text-white rounded-xl text-[13px] font-medium">
+          Subscribe to this week →
+        </button>
+      </div>
 
-      {/* ── CTA bar ── */}
-      <div className="fixed bottom-16 left-0 right-0 px-5 pb-3 bg-white border-t border-[#E8E5DE] max-w-md mx-auto">
+      {/* ── About ── */}
+      <div className="px-5 mt-4 pb-4">
+        <p className="text-[12px] text-[#9A8A7A] leading-relaxed">{kitchen.description}</p>
+      </div>
+
+      {/* ── Bottom CTA ── */}
+      <div className="fixed bottom-16 left-0 right-0 max-w-md mx-auto px-5 pb-3 bg-[#FDF8F3] border-t border-[#E8DDD0]">
         <div className="pt-3">
-          {kitchen.type === 'tiffin' ? (
+          {selectedMeal && (
             <button
-              onClick={handleSubscribe}
-              className="w-full py-3.5 bg-[#2C2C2A] text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5"
+              onClick={handleOrderSingle}
+              className="w-full py-3.5 text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5"
+              style={{ background: '#C8522A' }}
             >
-              <span>Subscribe — {selectedPlan?.toLowerCase() ?? 'choose a'} plan</span>
-              <span className="text-[#9FE1CB] text-[12px]">
-                {selectedPlan ? `$${selectedPlan === 'DAILY' ? 45 : selectedPlan === 'WEEKLY' ? 75 : 270}/wk` : 'Select plan'}
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={() => cartCount > 0 ? setCartOpen(true) : null}
-              className="w-full py-3.5 bg-[#2C2C2A] text-white rounded-2xl text-[14px] font-medium"
-            >
-              {cartCount > 0 ? `View cart (${cartCount} items)` : 'Add items to order'}
+              <span>Order {selectedMeal.emoji} {selectedMeal.day}'s meal</span>
+              <span className="text-orange-200 text-[12px]">${kitchen.pricePerMeal} · {selectedSlot}</span>
             </button>
           )}
         </div>
       </div>
 
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
       <NavBar />
     </div>
   );

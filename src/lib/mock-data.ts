@@ -1,10 +1,31 @@
-import { Kitchen, MenuItem } from './types';
+import { Kitchen } from './types';
 
 export const MOCK_KITCHENS: Kitchen[] = [
   {
-    id: 'kitchen-1',
+    id: 'chabar',
+    name: 'Chabar Kitchen',
+    tagline: 'Bold flavours. Honest food.',
+    description: 'Our own restaurant chain. Every meal is cooked fresh daily with no shortcuts.',
+    cuisine: 'Indian',
+    type: 'restaurant',
+    address: '512 Granville St',
+    city: 'Vancouver',
+    rating: 4.8,
+    reviewCount: 312,
+    isOpen: true,
+    isHalal: true,
+    isVeg: false,
+    deliverySlots: ['12:00pm', '6:00pm'],
+    cutoffTime: '8:00pm',
+    pricePerMeal: 13,
+    weeklyPrice: 55,
+    weeklySavingsPct: 15,
+  },
+  {
+    id: 'ghar-ka-khana',
     name: 'Ghar Ka Khana',
-    description: 'Authentic home-cooked North Indian meals made with love. Dals, curries, fresh rotis daily.',
+    tagline: 'Home cooking. Nothing more.',
+    description: 'Authentic North Indian home cooking made by real home chefs. Dals, curries, fresh rotis daily.',
     cuisine: 'Indian',
     type: 'tiffin',
     address: '234 Robson St',
@@ -14,13 +35,17 @@ export const MOCK_KITCHENS: Kitchen[] = [
     isOpen: true,
     isHalal: true,
     isVeg: false,
-    deliveryTime: '25–35 min',
+    deliverySlots: ['12:00pm', '6:00pm'],
+    cutoffTime: '8:00pm',
     pricePerMeal: 9,
+    weeklyPrice: 38,
+    weeklySavingsPct: 16,
   },
   {
-    id: 'kitchen-2',
+    id: 'nourish',
     name: 'Nourish Box',
-    description: 'Clean, macro-balanced meals for health-conscious eaters. High protein, low carb options daily.',
+    tagline: 'Clean food. Real ingredients.',
+    description: 'Macro-balanced meals for health-conscious eaters. High protein, whole ingredients, daily.',
     cuisine: 'Healthy',
     type: 'tiffin',
     address: '89 Commercial Dr',
@@ -30,29 +55,17 @@ export const MOCK_KITCHENS: Kitchen[] = [
     isOpen: true,
     isHalal: false,
     isVeg: true,
-    deliveryTime: '20–30 min',
+    deliverySlots: ['12:00pm'],
+    cutoffTime: '8:00pm',
     pricePerMeal: 11,
+    weeklyPrice: 46,
+    weeklySavingsPct: 16,
   },
   {
-    id: 'kitchen-3',
-    name: 'Chabar Kitchen',
-    description: 'Our own restaurant chain. Fresh, bold flavours — from biryanis to wraps.',
-    cuisine: 'Indian',
-    type: 'restaurant',
-    address: '512 Granville St',
-    city: 'Vancouver',
-    rating: 4.6,
-    reviewCount: 312,
-    isOpen: true,
-    isHalal: true,
-    isVeg: false,
-    deliveryTime: '20–35 min',
-    pricePerMeal: 13,
-  },
-  {
-    id: 'kitchen-4',
+    id: 'desi-dhaba',
     name: 'Desi Dhaba',
-    description: 'Punjab-style home cooking. Sarson da saag, makki roti, authentic tadkas.',
+    tagline: 'Punjab on a plate.',
+    description: 'Sarson da saag, makki roti, authentic tadkas. Real Punjabi home cooking.',
     cuisine: 'Punjabi',
     type: 'tiffin',
     address: '14 Fraser St',
@@ -62,72 +75,79 @@ export const MOCK_KITCHENS: Kitchen[] = [
     isOpen: false,
     isHalal: true,
     isVeg: false,
-    deliveryTime: '30–40 min',
+    deliverySlots: ['12:00pm'],
+    cutoffTime: '8:00pm',
     pricePerMeal: 8,
-  },
-  {
-    id: 'kitchen-5',
-    name: 'Green Bowl Co.',
-    description: 'Plant-based South Asian bowls. Lentils, greens, spices — all vegan.',
-    cuisine: 'Vegan',
-    type: 'tiffin',
-    address: '78 Main St',
-    city: 'Vancouver',
-    rating: 4.5,
-    reviewCount: 64,
-    isOpen: true,
-    isHalal: false,
-    isVeg: true,
-    deliveryTime: '25–35 min',
-    pricePerMeal: 10,
-  },
-  {
-    id: 'kitchen-6',
-    name: 'Biryani Bros',
-    description: 'One focus: the best biryani in Vancouver. Chicken, lamb, veg — slow-cooked daily.',
-    cuisine: 'Pakistani',
-    type: 'restaurant',
-    address: '209 Kingsway',
-    city: 'Vancouver',
-    rating: 4.9,
-    reviewCount: 256,
-    isOpen: true,
-    isHalal: true,
-    isVeg: false,
-    deliveryTime: '30–45 min',
-    pricePerMeal: 14,
+    weeklyPrice: 34,
+    weeklySavingsPct: 15,
   },
 ];
 
-export const MOCK_MENU_ITEMS: Record<string, MenuItem[]> = {
-  'kitchen-1': [
-    { id: 'm1', kitchenId: 'kitchen-1', name: 'Dal makhani + rice', description: 'Slow-cooked black lentils, basmati rice, green salad', price: 9, calories: 520, protein: 22, isAvailable: true, tags: ['Halal', 'Vegetarian'] },
-    { id: 'm2', kitchenId: 'kitchen-1', name: 'Paneer paratha set', description: '3 parathas, yogurt, pickle, masala chai', price: 10, calories: 680, protein: 28, isAvailable: true, tags: ['Vegetarian'] },
-    { id: 'm3', kitchenId: 'kitchen-1', name: 'Chole bhature', description: 'Spiced chickpeas, 2 fluffy bhaturas, onion salad', price: 11, calories: 740, protein: 24, isAvailable: true, tags: ['Halal', 'Vegetarian'] },
-    { id: 'm4', kitchenId: 'kitchen-1', name: 'Chicken tikka + rice', description: 'Tandoor-marinated chicken, jeera rice, raita', price: 12, calories: 620, protein: 38, isAvailable: true, tags: ['Halal', 'High protein'] },
-    { id: 'm5', kitchenId: 'kitchen-1', name: 'Lamb keema + roti', description: 'Minced lamb curry, 3 fresh rotis, onion salad', price: 13, calories: 660, protein: 41, isAvailable: true, tags: ['Halal', 'High protein'] },
-    { id: 'm6', kitchenId: 'kitchen-1', name: 'Paneer bhurji + quinoa', description: 'Scrambled cottage cheese, quinoa, cucumber raita', price: 11, calories: 580, protein: 32, isAvailable: true, tags: ['Vegetarian', 'High protein'] },
+// Weekly meal calendar — one meal per day per kitchen
+export const WEEKLY_MEALS: Record<string, WeekMeal[]> = {
+  'chabar': [
+    { day: 'Mon', date: 'Jan 13', emoji: '🍗', name: 'Butter chicken set', description: 'Creamy butter chicken, jeera rice, fresh roti, cucumber raita', protein: '38g', calories: 680, tags: ['Halal', 'High protein'] },
+    { day: 'Tue', date: 'Jan 14', emoji: '🫘', name: 'Dal makhani set', description: 'Slow-cooked black lentils, basmati rice, green salad, pickle', protein: '24g', calories: 590, tags: ['Halal', 'Vegetarian'] },
+    { day: 'Wed', date: 'Jan 15', emoji: '🍚', name: 'Chicken biryani', description: 'Dum-cooked basmati, tender chicken, saffron, mint raita, salan', protein: '42g', calories: 720, tags: ['Halal', 'High protein'] },
+    { day: 'Thu', date: 'Jan 16', emoji: '🧆', name: 'Paneer tikka masala', description: 'Chargrilled paneer, rich tomato masala, roti, dal soup', protein: '28g', calories: 620, tags: ['Vegetarian'] },
+    { day: 'Fri', date: 'Jan 17', emoji: '🥩', name: 'Seekh kebab platter', description: '4 seekh kebabs, garlic naan, mint chutney, onion salad', protein: '46g', calories: 640, tags: ['Halal', 'High protein'] },
   ],
-  'kitchen-2': [
-    { id: 'm7', kitchenId: 'kitchen-2', name: 'Grilled chicken bowl', description: 'Grilled chicken breast, quinoa, roasted veg, tahini', price: 13, calories: 490, protein: 44, isAvailable: true, tags: ['High protein', 'Low carb'] },
-    { id: 'm8', kitchenId: 'kitchen-2', name: 'Lentil power bowl', description: 'Red lentils, brown rice, kale, lemon dressing', price: 11, calories: 520, protein: 26, isAvailable: true, tags: ['Vegan', 'High protein'] },
-    { id: 'm9', kitchenId: 'kitchen-2', name: 'Egg bhurji wrap', description: '3 scrambled eggs, whole wheat wrap, sriracha', price: 10, calories: 430, protein: 30, isAvailable: true, tags: ['Vegetarian', 'High protein'] },
+  'ghar-ka-khana': [
+    { day: 'Mon', date: 'Jan 13', emoji: '🫘', name: 'Dal tadka + rice', description: 'Yellow dal tadka, basmati rice, fresh roti, achaar', protein: '22g', calories: 520, tags: ['Halal', 'Vegetarian'] },
+    { day: 'Tue', date: 'Jan 14', emoji: '🥘', name: 'Chole bhature', description: 'Spiced chickpeas, 2 fluffy bhaturas, onion salad, lassi', protein: '24g', calories: 740, tags: ['Vegetarian'] },
+    { day: 'Wed', date: 'Jan 15', emoji: '🍗', name: 'Chicken karahi', description: 'Wok-cooked chicken, fresh tomatoes, ginger, roti, salad', protein: '41g', calories: 580, tags: ['Halal', 'High protein'] },
+    { day: 'Thu', date: 'Jan 16', emoji: '🧀', name: 'Paneer paratha set', description: '3 paneer parathas, yogurt, pickle, masala chai', protein: '28g', calories: 680, tags: ['Vegetarian'] },
+    { day: 'Fri', date: 'Jan 17', emoji: '🍖', name: 'Lamb keema + roti', description: 'Minced lamb curry, 3 fresh rotis, cucumber raita, salad', protein: '41g', calories: 660, tags: ['Halal', 'High protein'] },
   ],
-  'kitchen-3': [
-    { id: 'm10', kitchenId: 'kitchen-3', name: 'Chicken biryani', description: 'Dum-cooked basmati, tender chicken, saffron, raita', price: 16, calories: 720, protein: 38, isAvailable: true, tags: ['Halal'] },
-    { id: 'm11', kitchenId: 'kitchen-3', name: 'Seekh kebab platter', description: '4 seekh kebabs, naan, mint chutney, onion salad', price: 18, calories: 640, protein: 46, isAvailable: true, tags: ['Halal', 'High protein'] },
-    { id: 'm12', kitchenId: 'kitchen-3', name: 'Veg thali', description: 'Dal, paneer sabzi, rice, 2 rotis, salad, dessert', price: 14, calories: 780, protein: 26, isAvailable: true, tags: ['Vegetarian'] },
+  'nourish': [
+    { day: 'Mon', date: 'Jan 13', emoji: '🥗', name: 'Grilled chicken bowl', description: 'Herb chicken breast, quinoa, roasted veg, tahini dressing', protein: '44g', calories: 490, tags: ['High protein', 'Low carb'] },
+    { day: 'Tue', date: 'Jan 14', emoji: '🥙', name: 'Lentil power bowl', description: 'Red lentils, brown rice, kale, lemon vinaigrette, seeds', protein: '26g', calories: 520, tags: ['Vegan', 'High protein'] },
+    { day: 'Wed', date: 'Jan 15', emoji: '🌯', name: 'Egg bhurji wrap', description: '3 scrambled eggs, whole wheat wrap, avocado, sriracha', protein: '30g', calories: 430, tags: ['Vegetarian'] },
+    { day: 'Thu', date: 'Jan 16', emoji: '🍱', name: 'Salmon teriyaki bowl', description: 'Grilled salmon, soba noodles, edamame, sesame dressing', protein: '38g', calories: 510, tags: ['High protein'] },
+    { day: 'Fri', date: 'Jan 17', emoji: '🥬', name: 'Paneer tikka bowl', description: 'Grilled paneer, brown rice, roasted peppers, mint chutney', protein: '32g', calories: 480, tags: ['Vegetarian', 'High protein'] },
+  ],
+  'desi-dhaba': [
+    { day: 'Mon', date: 'Jan 13', emoji: '🌿', name: 'Sarson da saag', description: 'Mustard greens, makki roti, white butter, jaggery', protein: '18g', calories: 480, tags: ['Vegetarian'] },
+    { day: 'Tue', date: 'Jan 14', emoji: '🍗', name: 'Amritsari murgh', description: 'Punjabi-style chicken curry, roti, salad, lassi', protein: '39g', calories: 560, tags: ['Halal'] },
+    { day: 'Wed', date: 'Jan 15', emoji: '🫘', name: 'Rajma chawal', description: 'Kidney bean curry, basmati rice, papad, pickle', protein: '22g', calories: 550, tags: ['Vegetarian'] },
+    { day: 'Thu', date: 'Jan 16', emoji: '🥩', name: 'Mutton roghan josh', description: 'Slow-cooked mutton, Kashmiri spices, roti, raita', protein: '44g', calories: 620, tags: ['Halal', 'High protein'] },
+    { day: 'Fri', date: 'Jan 17', emoji: '🧀', name: 'Paneer lababdar', description: 'Rich paneer gravy, butter naan, dal makhani, salad', protein: '26g', calories: 700, tags: ['Vegetarian'] },
   ],
 };
 
-export const CATEGORIES = ['All', 'Tiffin plans', 'Healthy', 'Indian', 'Halal', 'Vegetarian', 'Vegan'];
+export type WeekMeal = {
+  day: string;
+  date: string;
+  emoji: string;
+  name: string;
+  description: string;
+  protein: string;
+  calories: number;
+  tags: string[];
+};
 
-export const DELIVERY_DAYS = [
-  { day: 'Mon', time: '12–1pm' },
-  { day: 'Tue', time: '12–1pm' },
-  { day: 'Wed', time: '12–1pm' },
-  { day: 'Thu', time: '6–7pm' },
-  { day: 'Fri', time: '6–7pm' },
-  { day: 'Sat', time: '11–12pm' },
-  { day: 'Sun', time: '11–12pm' },
-];
+export const CATEGORIES = ['All', 'Halal', 'Vegetarian', 'High protein', 'Tiffin', 'Restaurant'];
+
+export const DELIVERY_SLOTS = ['12:00pm – 1:00pm', '6:00pm – 7:00pm'];
+
+// Get today's day name
+export function getTodayMeal(kitchenId: string): WeekMeal | null {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = days[new Date().getDay()];
+  const meals = WEEKLY_MEALS[kitchenId] ?? [];
+  return meals.find(m => m.day === today) ?? meals[0] ?? null;
+}
+
+// Check if past cutoff (8pm)
+export function isPastCutoff(): boolean {
+  return new Date().getHours() >= 20;
+}
+
+// Hours until cutoff
+export function hoursUntilCutoff(): number {
+  const now = new Date();
+  const cutoff = new Date();
+  cutoff.setHours(20, 0, 0, 0);
+  if (now >= cutoff) return 0;
+  return Math.floor((cutoff.getTime() - now.getTime()) / (1000 * 60 * 60));
+}

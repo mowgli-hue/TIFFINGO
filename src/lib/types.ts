@@ -1,7 +1,8 @@
 export type Kitchen = {
   id: string;
   name: string;
-  description?: string;
+  tagline: string;
+  description: string;
   cuisine: string;
   type: 'tiffin' | 'restaurant';
   address: string;
@@ -12,55 +13,22 @@ export type Kitchen = {
   isOpen: boolean;
   isHalal: boolean;
   isVeg: boolean;
-  deliveryTime?: string; // "25–35 min"
-  pricePerMeal?: number;
-  menuItems?: MenuItem[];
-};
-
-export type MenuItem = {
-  id: string;
-  kitchenId: string;
-  name: string;
-  description?: string;
-  price: number;
-  calories?: number;
-  protein?: number;
-  imageUrl?: string;
-  isAvailable: boolean;
-  tags: string[];
-};
-
-export type Order = {
-  id: string;
-  kitchenId: string;
-  kitchenName: string;
-  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'ON_THE_WAY' | 'DELIVERED' | 'CANCELLED';
-  totalAmount: number;
-  items: CartItem[];
-  address: string;
-  driverName?: string;
-  estimatedEta?: string;
-  createdAt: string;
-};
-
-export type Subscription = {
-  id: string;
-  kitchenId: string;
-  kitchenName: string;
-  plan: 'DAILY' | 'WEEKLY' | 'MONTHLY';
-  status: 'ACTIVE' | 'PAUSED' | 'CANCELLED';
-  mealsPerWeek: number;
-  pricePerWeek: number;
-  deliveryDays: string[];
-  deliveryTime: string;
-  nextBillingDate?: string;
+  deliverySlots: string[];
+  cutoffTime: string;
+  pricePerMeal: number;
+  weeklyPrice: number;
+  weeklySavingsPct: number;
 };
 
 export type CartItem = {
-  menuItemId: string;
-  name: string;
+  kitchenId: string;
+  kitchenName: string;
+  mealName: string;
+  day: string;
+  date: string;
   price: number;
-  quantity: number;
+  deliverySlot: string;
+  isWeekly: boolean;
 };
 
 export type User = {
