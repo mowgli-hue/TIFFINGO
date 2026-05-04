@@ -53,7 +53,7 @@ export default function KitchenCard({ kitchen }: { kitchen: Kitchen }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-[#9A8A7A]">
               <Clock size={11} />
-              <span className="text-[11px]">{kitchen.deliveryTime ?? '30 min'}</span>
+              <span className="text-[11px]">{kitchen.cutoffTime}</span>
             </div>
             {kitchen.pricePerMeal && (
               <span className="text-[12px] font-medium text-[#2C1810]">${kitchen.pricePerMeal}/meal</span>
