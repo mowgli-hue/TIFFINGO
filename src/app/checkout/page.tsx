@@ -145,7 +145,7 @@ function CheckoutPage() {
                       : 'bg-[#F1EFE8] border border-transparent'
                   )}
                 >
-                  <p className={clsx('text-[10px] font-medium', selectedDays.includes(slot) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{day}</p>
+                  <p className={clsx('text-[10px] font-medium', selectedDays.includes(slot) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{slot}</p>
                   <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(slot) ? 'text-[#5DCAA5]' : 'text-[#9A8A7A]')}>{slot}</p>
                 </button>
               ))}
