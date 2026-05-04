@@ -129,24 +129,24 @@ function CheckoutPage() {
 
             <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
             <div className="flex gap-1.5">
-              {DELIVERY_SLOTS.map(({ day, time }) => (
+              {DELIVERY_SLOTS.map((slot) => (
                 <button
-                  key={day}
+                  key={slot}
                   onClick={() => {
-                    const next = selectedDays.includes(day)
+                    const next = selectedDays.includes(slot)
                       ? selectedDays.filter(d => d !== day)
                       : [...selectedDays, day];
                     if (next.length > 0) setDays(next);
                   }}
                   className={clsx(
                     'flex-1 rounded-xl py-2 text-center transition-all',
-                    selectedDays.includes(day)
+                    selectedDays.includes(slot)
                       ? 'bg-[#FFF0E6] border border-[#C8522A]'
                       : 'bg-[#F1EFE8] border border-transparent'
                   )}
                 >
-                  <p className={clsx('text-[10px] font-medium', selectedDays.includes(day) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{day}</p>
-                  <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(day) ? 'text-[#5DCAA5]' : 'text-[#9A8A7A]')}>{time}</p>
+                  <p className={clsx('text-[10px] font-medium', selectedDays.includes(slot) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{day}</p>
+                  <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(slot) ? 'text-[#5DCAA5]' : 'text-[#9A8A7A]')}>{slot}</p>
                 </button>
               ))}
             </div>
