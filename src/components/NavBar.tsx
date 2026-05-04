@@ -14,8 +14,8 @@ const NAV = [
 
 export default function NavBar() {
   const pathname = usePathname();
-  const items = useCart(s => s.items);
-  const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  const kitchenId = useCart(s => s.kitchenId);
+  const cartCount = kitchenId ? 1 : 0;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#E8DDD0]">
@@ -28,21 +28,21 @@ export default function NavBar() {
               href={href}
               className={clsx(
                 'flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all',
-                active ? 'text-[#2C1810]' : 'text-[#B4B2A9]'
+                active ? 'text-[#2C1810]' : 'text-[#B4A494]'
               )}
             >
               <div className="relative">
                 <Icon size={20} strokeWidth={active ? 2 : 1.5} />
                 {href === '/orders' && cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-[#C8522A] text-white text-[9px] font-medium w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1.5 text-white text-[9px] font-medium w-4 h-4 rounded-full flex items-center justify-center" style={{ background: '#C8522A' }}>
                     {cartCount}
                   </span>
                 )}
               </div>
-              <span className={clsx('text-[9px] font-medium', active ? 'text-[#2C1810]' : 'text-[#B4B2A9]')}>
+              <span className={clsx('text-[9px] font-medium', active ? 'text-[#2C1810]' : 'text-[#B4A494]')}>
                 {label}
               </span>
-              {active && <div className="w-1 h-1 rounded-full bg-[#C8522A]" />}
+              {active && <div className="w-1 h-1 rounded-full" style={{ background: '#C8522A' }} />}
             </Link>
           );
         })}
