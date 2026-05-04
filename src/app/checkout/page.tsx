@@ -134,8 +134,8 @@ function CheckoutPage() {
                   key={slot}
                   onClick={() => {
                     const next = selectedDays.includes(slot)
-                      ? selectedDays.filter(d => d !== day)
-                      : [...selectedDays, day];
+                      ? selectedDays.filter(d => d !== slot)
+                      : [...selectedDays, slot];
                     if (next.length > 0) setDays(next);
                   }}
                   className={clsx(
