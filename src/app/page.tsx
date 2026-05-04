@@ -40,32 +40,32 @@ export default function HomePage() {
   const restaurants    = MOCK_KITCHENS.filter(k => k.type === 'restaurant');
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-24">
+    <div className="min-h-screen bg-[#FDF8F3] pb-24">
       {/* ── Header ── */}
-      <div className="bg-[#FAFAF8] px-5 pt-14 pb-4">
+      <div className="bg-[#FDF8F3] px-5 pt-14 pb-4">
         {/* Location row */}
         <div className="flex items-center gap-1.5 mb-3">
-          <div className="w-2 h-2 rounded-full bg-[#1D9E75]" />
+          <div className="w-2 h-2 rounded-full bg-[#C8522A]" />
           <span className="text-[12px] text-[#5F5E5A]">Vancouver, BC</span>
-          <ChevronDown size={12} className="text-[#888780]" />
+          <ChevronDown size={12} className="text-[#9A8A7A]" />
         </div>
 
         {/* Greeting */}
-        <h1 className="font-serif text-[26px] text-[#2C2C2A] leading-tight mb-1">
+        <h1 className="font-serif text-[26px] text-[#2C1810] leading-tight mb-1">
           {greeting},<br />
-          <em className="text-[#1D9E75]">{firstName}.</em>
+          <em className="text-[#C8522A]">{firstName}.</em>
         </h1>
-        <p className="text-[13px] text-[#888780] mb-4">What are you eating today?</p>
+        <p className="text-[13px] text-[#9A8A7A] mb-4">What's cooking today? 🍲</p>
 
         {/* Search */}
-        <div className="flex items-center gap-2.5 bg-white border border-[#E8E5DE] rounded-xl px-3.5 py-2.5">
+        <div className="flex items-center gap-2.5 bg-white border border-[#E8DDD0] rounded-xl px-3.5 py-2.5">
           <Search size={15} className="text-[#B4B2A9] flex-shrink-0" />
           <input
             type="text"
             placeholder="Search kitchens, dishes..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="flex-1 text-[13px] text-[#2C2C2A] placeholder-[#B4B2A9] bg-transparent border-none outline-none"
+            className="flex-1 text-[13px] text-[#2C1810] placeholder-[#B4B2A9] bg-transparent border-none outline-none"
           />
         </div>
       </div>
@@ -80,8 +80,8 @@ export default function HomePage() {
               className={clsx(
                 'flex-shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-medium border transition-all',
                 activeCategory === cat
-                  ? 'bg-[#2C2C2A] text-white border-[#2C2C2A]'
-                  : 'bg-white text-[#5F5E5A] border-[#E8E5DE]'
+                  ? 'bg-[#2C1810] text-white border-[#2C1810]'
+                  : 'bg-white text-[#5F5E5A] border-[#E8DDD0]'
               )}
             >
               {cat}
@@ -93,14 +93,14 @@ export default function HomePage() {
       {searchQuery ? (
         /* ── Search results ── */
         <div className="px-5">
-          <p className="text-[12px] text-[#888780] mb-3">{filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{searchQuery}"</p>
+          <p className="text-[12px] text-[#9A8A7A] mb-3">{filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{searchQuery}"</p>
           <div className="grid grid-cols-2 gap-3">
             {filtered.map(k => <KitchenCard key={k.id} kitchen={k} />)}
           </div>
           {filtered.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-[14px] font-medium text-[#2C2C2A] mb-1">No results found</p>
-              <p className="text-[12px] text-[#888780]">Try a different search term</p>
+              <p className="text-[14px] font-medium text-[#2C1810] mb-1">No results found</p>
+              <p className="text-[12px] text-[#9A8A7A]">Try a different search term</p>
             </div>
           )}
         </div>
@@ -109,8 +109,8 @@ export default function HomePage() {
           {/* ── Tiffin kitchens ── */}
           <div className="px-5 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[13px] font-medium text-[#2C2C2A]">Top tiffin kitchens</h2>
-              <Link href="/explore" className="text-[11px] text-[#1D9E75] font-medium">See all</Link>
+              <h2 className="text-[13px] font-medium text-[#2C1810]">Top tiffin kitchens</h2>
+              <Link href="/explore" className="text-[11px] text-[#C8522A] font-medium">See all</Link>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {tiffinKitchens.map(k => <KitchenCard key={k.id} kitchen={k} />)}
@@ -120,13 +120,13 @@ export default function HomePage() {
           {/* ── Subscription promo ── */}
           <div className="px-5 mb-6">
             <Link href="/explore?filter=tiffin">
-              <div className="bg-[#2C2C2A] rounded-2xl p-4 flex items-center justify-between">
+              <div className="bg-[#2C1810] rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-medium text-[#9FE1CB] tracking-wider mb-1">MEAL PLANS</p>
+                  <p className="text-[9px] font-medium text-[#FFD166] tracking-wider mb-1">MEAL PLANS</p>
                   <p className="text-[14px] font-medium text-white leading-snug">Subscribe &amp; save<br />up to 20%</p>
-                  <p className="text-[11px] text-[#888780] mt-0.5">Weekly · Monthly plans</p>
+                  <p className="text-[11px] text-[#9A8A7A] mt-0.5">Weekly · Monthly plans</p>
                 </div>
-                <button className="bg-[#1D9E75] text-white px-4 py-2 rounded-xl text-[12px] font-medium flex-shrink-0">
+                <button className="bg-[#C8522A] text-white px-4 py-2 rounded-xl text-[12px] font-medium flex-shrink-0">
                   Explore
                 </button>
               </div>
@@ -136,18 +136,18 @@ export default function HomePage() {
           {/* ── AI Planner promo ── */}
           <div className="px-5 mb-6">
             <Link href="/planner">
-              <div className="bg-white border border-[#1D9E75] rounded-2xl p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#1D9E75] flex items-center justify-center flex-shrink-0">
+              <div className="bg-white border border-[#C8522A] rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#C8522A] flex items-center justify-center flex-shrink-0">
                   <Sparkles size={18} className="text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[9px] font-medium text-[#0F6E56] bg-[#E1F5EE] px-2 py-0.5 rounded-full tracking-wide">AI MEAL PLANNER</span>
+                    <span className="text-[9px] font-medium text-[#0F6E56] bg-[#FFF0E6] px-2 py-0.5 rounded-full tracking-wide">AI MEAL PLANNER</span>
                   </div>
-                  <p className="text-[13px] font-medium text-[#2C2C2A]">Personalise your weekly meals</p>
-                  <p className="text-[11px] text-[#888780]">Set goals · AI builds your plan</p>
+                  <p className="text-[13px] font-medium text-[#2C1810]">Personalise your weekly meals</p>
+                  <p className="text-[11px] text-[#9A8A7A]">Set goals · AI builds your plan</p>
                 </div>
-                <span className="text-[#1D9E75] text-[12px] font-medium">Try →</span>
+                <span className="text-[#C8522A] text-[12px] font-medium">Try →</span>
               </div>
             </Link>
           </div>
@@ -155,23 +155,23 @@ export default function HomePage() {
           {/* ── Nearby restaurants ── */}
           <div className="px-5 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[13px] font-medium text-[#2C2C2A]">Nearby restaurants</h2>
-              <Link href="/explore?filter=restaurant" className="text-[11px] text-[#1D9E75] font-medium">See all</Link>
+              <h2 className="text-[13px] font-medium text-[#2C1810]">Nearby restaurants</h2>
+              <Link href="/explore?filter=restaurant" className="text-[11px] text-[#C8522A] font-medium">See all</Link>
             </div>
             <div className="space-y-2.5">
               {restaurants.map(k => (
                 <Link key={k.id} href={`/kitchen/${k.id}`}>
-                  <div className="bg-white border border-[#E8E5DE] rounded-2xl p-3.5 flex items-center gap-3 hover:border-[#1D9E75] transition-colors">
+                  <div className="bg-white border border-[#E8DDD0] rounded-2xl p-3.5 flex items-center gap-3 hover:border-[#C8522A] transition-colors">
                     <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0', 'bg-[#FAEEDA]')}>
                       🍛
                     </div>
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[#2C2C2A]">{k.name}</p>
-                      <p className="text-[11px] text-[#888780]">{k.cuisine} · {k.deliveryTime}</p>
+                      <p className="text-[13px] font-medium text-[#2C1810]">{k.name}</p>
+                      <p className="text-[11px] text-[#9A8A7A]">{k.cuisine} · {k.deliveryTime}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[12px] font-medium text-[#2C2C2A]">${k.pricePerMeal}/meal</p>
-                      <p className="text-[10px] text-[#888780]">★ {k.rating}</p>
+                      <p className="text-[12px] font-medium text-[#2C1810]">${k.pricePerMeal}/meal</p>
+                      <p className="text-[10px] text-[#9A8A7A]">★ {k.rating}</p>
                     </div>
                   </div>
                 </Link>

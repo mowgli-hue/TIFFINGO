@@ -41,13 +41,13 @@ function ExplorePage() {
   }, [search, category, sort]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-24">
+    <div className="min-h-screen bg-[#FDF8F3] pb-24">
       <div className="px-5 pt-14 pb-4">
-        <h1 className="font-serif text-[22px] text-[#2C2C2A] mb-4">Explore</h1>
+        <h1 className="font-serif text-[22px] text-[#2C1810] mb-4">Explore</h1>
 
         {/* Search + filter row */}
         <div className="flex gap-2 mb-4">
-          <div className="flex-1 flex items-center gap-2 bg-white border border-[#E8E5DE] rounded-xl px-3 py-2.5">
+          <div className="flex-1 flex items-center gap-2 bg-white border border-[#E8DDD0] rounded-xl px-3 py-2.5">
             <Search size={14} className="text-[#B4B2A9] flex-shrink-0" />
             <input
               value={search}
@@ -58,7 +58,7 @@ function ExplorePage() {
           </div>
           <button
             onClick={() => setShowSort(!showSort)}
-            className="w-10 h-10 bg-white border border-[#E8E5DE] rounded-xl flex items-center justify-center"
+            className="w-10 h-10 bg-white border border-[#E8DDD0] rounded-xl flex items-center justify-center"
           >
             <SlidersHorizontal size={15} className="text-[#5F5E5A]" />
           </button>
@@ -73,7 +73,7 @@ function ExplorePage() {
                 onClick={() => { setSort(opt); setShowSort(false); }}
                 className={clsx(
                   'w-full px-4 py-2.5 text-left text-[13px] border-b border-[#F1EFE8] last:border-0 transition-colors',
-                  sort === opt ? 'text-[#1D9E75] font-medium bg-[#f4fbf8]' : 'text-[#5F5E5A]'
+                  sort === opt ? 'text-[#C8522A] font-medium bg-[#FFF8F4]' : 'text-[#5F5E5A]'
                 )}
               >
                 {opt}
@@ -90,7 +90,7 @@ function ExplorePage() {
               onClick={() => setCategory(cat)}
               className={clsx(
                 'flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium border transition-all',
-                category === cat ? 'bg-[#2C2C2A] text-white border-[#2C2C2A]' : 'bg-white text-[#5F5E5A] border-[#E8E5DE]'
+                category === cat ? 'bg-[#2C1810] text-white border-[#2C1810]' : 'bg-white text-[#5F5E5A] border-[#E8DDD0]'
               )}
             >
               {cat}
@@ -101,7 +101,7 @@ function ExplorePage() {
 
       {/* Results */}
       <div className="px-5">
-        <p className="text-[12px] text-[#888780] mb-3">
+        <p className="text-[12px] text-[#9A8A7A] mb-3">
           {results.length} kitchen{results.length !== 1 ? 's' : ''} · sorted by {sort.toLowerCase()}
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -109,8 +109,8 @@ function ExplorePage() {
         </div>
         {results.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-[14px] font-medium text-[#2C2C2A] mb-1">Nothing found</p>
-            <p className="text-[12px] text-[#888780]">Try a different category or search term</p>
+            <p className="text-[14px] font-medium text-[#2C1810] mb-1">Nothing found</p>
+            <p className="text-[12px] text-[#9A8A7A]">Try a different category or search term</p>
           </div>
         )}
       </div>

@@ -27,19 +27,19 @@ export default function ProfilePage() {
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() ?? 'TG';
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-24">
+    <div className="min-h-screen bg-[#FDF8F3] pb-24">
       <div className="px-5 pt-14 pb-6">
-        <h1 className="font-serif text-[22px] text-[#2C2C2A] mb-6">Profile</h1>
+        <h1 className="font-serif text-[22px] text-[#2C1810] mb-6">Profile</h1>
 
         {/* Avatar + info */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-[#E1F5EE] flex items-center justify-center text-[20px] font-medium text-[#1D9E75] flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-[#FFF0E6] flex items-center justify-center text-[20px] font-medium text-[#C8522A] flex-shrink-0">
             {initials}
           </div>
           <div>
-            <p className="text-[16px] font-medium text-[#2C2C2A]">{user?.name ?? 'Welcome!'}</p>
-            <p className="text-[13px] text-[#888780]">{user?.email ?? 'Sign in to access your account'}</p>
-            {user && <p className="text-[11px] text-[#1D9E75] mt-0.5">Vancouver, BC</p>}
+            <p className="text-[16px] font-medium text-[#2C1810]">{user?.name ?? 'Welcome!'}</p>
+            <p className="text-[13px] text-[#9A8A7A]">{user?.email ?? 'Sign in to access your account'}</p>
+            {user && <p className="text-[11px] text-[#C8522A] mt-0.5">Vancouver, BC</p>}
           </div>
         </div>
 
@@ -51,9 +51,9 @@ export default function ProfilePage() {
               { val: '1',  label: 'Active plan' },
               { val: '4.9', label: 'Avg rating' },
             ].map(({ val, label }) => (
-              <div key={label} className="bg-white border border-[#E8E5DE] rounded-2xl p-3 text-center">
-                <p className="text-[18px] font-medium text-[#2C2C2A]">{val}</p>
-                <p className="text-[10px] text-[#888780] mt-0.5">{label}</p>
+              <div key={label} className="bg-white border border-[#E8DDD0] rounded-2xl p-3 text-center">
+                <p className="text-[18px] font-medium text-[#2C1810]">{val}</p>
+                <p className="text-[10px] text-[#9A8A7A] mt-0.5">{label}</p>
               </div>
             ))}
           </div>
@@ -68,7 +68,7 @@ export default function ProfilePage() {
                   <div className="w-8 h-8 rounded-lg bg-[#F1EFE8] flex items-center justify-center">
                     <Icon size={15} className="text-[#5F5E5A]" />
                   </div>
-                  <span className="flex-1 text-[13px] text-[#2C2C2A]">{label}</span>
+                  <span className="flex-1 text-[13px] text-[#2C1810]">{label}</span>
                   <ChevronRight size={14} className="text-[#B4B2A9]" />
                 </div>
               </Link>
@@ -77,12 +77,12 @@ export default function ProfilePage() {
         ) : (
           <div className="space-y-3 mb-4">
             <Link href="/auth/login">
-              <button className="w-full py-3.5 bg-[#2C2C2A] text-white rounded-2xl text-[14px] font-medium">
+              <button className="w-full py-3.5 bg-[#2C1810] text-white rounded-2xl text-[14px] font-medium">
                 Sign in
               </button>
             </Link>
             <Link href="/auth/signup">
-              <button className="w-full py-3.5 bg-white border border-[#E8E5DE] text-[#2C2C2A] rounded-2xl text-[14px] font-medium">
+              <button className="w-full py-3.5 bg-white border border-[#E8DDD0] text-[#2C1810] rounded-2xl text-[14px] font-medium">
                 Create account
               </button>
             </Link>
@@ -108,7 +108,7 @@ export default function ProfilePage() {
         {user && (
           <button
             onClick={handleLogout}
-            className="w-full py-3 border border-[#E8E5DE] bg-white rounded-2xl text-[13px] font-medium text-[#D85A30] flex items-center justify-center gap-2"
+            className="w-full py-3 border border-[#E8DDD0] bg-white rounded-2xl text-[13px] font-medium text-[#D85A30] flex items-center justify-center gap-2"
           >
             <LogOut size={14} />
             Sign out
