@@ -7,42 +7,16 @@ import { CATEGORIES } from '@/lib/mock-data';
 import { useAuth } from '@/store/cart';
 import clsx from 'clsx';
 
-type WeeklyMeal = {
-  id: string;
-  day: string;
-  emoji: string;
-  name: string;
-  description: string;
-  protein: string;
-  calories: number;
-  tags: string[];
-};
+type WeeklyMeal = { id: string; day: string; emoji: string; name: string; description: string; protein: string; calories: number; tags: string[]; };
+type Kitchen = { id: string; name: string; tagline: string; cuisine: string; type: string; city: string; rating: number; reviewCount: number; isOpen: boolean; isHalal: boolean; isVeg: boolean; pricePerMeal: number; weeklyPrice: number; weeklySavingsPct: number; weeklyMeals: WeeklyMeal[]; };
 
-type Kitchen = {
-  id: string;
-  name: string;
-  tagline: string;
-  cuisine: string;
-  type: string;
-  city: string;
-  rating: number;
-  reviewCount: number;
-  isOpen: boolean;
-  isHalal: boolean;
-  isVeg: boolean;
-  pricePerMeal: number;
-  weeklyPrice: number;
-  weeklySavingsPct: number;
-  weeklyMeals: WeeklyMeal[];
-};
-
-function getTodayMeal(meals: WeeklyMeal[]): WeeklyMeal | null {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function getTodayMeal(meals: WeeklyMeal[]) {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const today = days[new Date().getDay()];
   return meals.find(m => m.day === today) ?? meals[0] ?? null;
 }
 
-function hoursUntilCutoff(): number {
+function hoursUntilCutoff() {
   const now = new Date();
   const cutoff = new Date();
   cutoff.setHours(20, 0, 0, 0);
@@ -54,7 +28,7 @@ export default function HomePage() {
   const { user } = useAuth();
   const [kitchens, setKitchens] = useState<Kitchen[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
 
   const hour = new Date().getHours();
@@ -71,10 +45,10 @@ export default function HomePage() {
   }, []);
 
   const filtered = kitchens.filter(k => {
-    if (activeCategory === 'Halal' && !k.isHalal) return false;
-    if (activeCategory === 'Vegetarian' && !k.isVeg) return false;
-    if (activeCategory === 'Tiffin' && k.type !== 'tiffin') return false;
-    if (activeCategory === 'Restaurant' && k.type !== 'restaurant') return false;
+    if (category === 'Halal' && !k.isHalal) return false;
+    if (category === 'Vegetarian' && !k.isVeg) return false;
+    if (category === 'Tiffin' && k.type !== 'tiffin') return false;
+    if (category === 'Restaurant' && k.type !== 'restaurant') return false;
     if (search.trim()) {
       const q = search.toLowerCase();
       return k.name.toLowerCase().includes(q) || k.cuisine.toLowerCase().includes(q);
@@ -83,62 +57,58 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen pb-28" style={{ background: '#FDF8F3' }}>
+    <div className="min-h-screen pb-28" style={{ background: '#F5F5F0' }}>
 
       {/* Hero */}
-      <div style={{ background: 'linear-gradient(160deg, #BF4E2A 0%, #8C3118 100%)' }} className="px-5 pt-14 pb-7 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+      <div style={{ background: 'linear-gradient(160deg, #1A3A2A 0%, #2D6A4A 100%)' }} className="px-5 pt-14 pb-7 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="flex items-center justify-between mb-4 relative z-10">
+        <div className="flex items-center justify-between mb-5 relative z-10">
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse" />
-            <span className="text-[11px] text-orange-100 font-medium">Surrey, BC</span>
-            <ChevronDown size={11} className="text-orange-300" />
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#F0B429' }} />
+            <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>Surrey, BC</span>
+            <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.4)' }} />
           </div>
           <Link href="/profile">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="text-[13px] font-medium text-white">{firstName[0]?.toUpperCase()}</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.12)', border: '0.5px solid rgba(255,255,255,0.2)' }}>
+              <span className="text-[12px] font-semibold text-white">{firstName[0]?.toUpperCase()}</span>
             </div>
           </Link>
         </div>
 
-        <h1 className="font-serif text-[30px] text-white leading-tight mb-1.5 relative z-10">
+        <h1 className="text-[32px] font-bold text-white leading-tight mb-1 relative z-10" style={{ fontFamily: 'Fraunces, serif' }}>
           {greeting},<br />
-          <em className="text-yellow-300">{firstName}.</em>
+          <em style={{ fontStyle: 'italic', color: '#F0B429' }}>{firstName}.</em>
         </h1>
-        <p className="text-[13px] text-orange-200 mb-5 relative z-10">
+        <p className="text-[13px] mb-5 relative z-10" style={{ color: 'rgba(255,255,255,0.5)' }}>
           {pastCutoff ? "Plan tomorrow's meals 🌙" : "What's cooking today? 🍲"}
         </p>
 
-        <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 relative z-10 shadow-xl shadow-black/20">
-          <Search size={15} className="text-[#B4A494] flex-shrink-0" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search kitchens or cuisine..."
-            className="flex-1 text-[13px] bg-transparent border-none outline-none text-[#2C1810] placeholder-[#C4B8AE]"
-          />
-          {search && <button onClick={() => setSearch('')} className="text-[#B4A494] text-[11px]">✕</button>}
+        <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 relative z-10" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
+          <Search size={15} style={{ color: '#A8B4A8', flexShrink: 0 }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search kitchens or cuisine..."
+            className="flex-1 text-[13px] bg-transparent border-none outline-none" style={{ color: '#1A3A2A' }} />
+          {search && <button onClick={() => setSearch('')} style={{ color: '#A8B4A8', fontSize: 11 }}>✕</button>}
         </div>
 
         {!pastCutoff && (
-          <div className="mt-3 flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2 relative z-10 border border-white/10">
-            <Clock size={12} className="text-yellow-300 flex-shrink-0" />
-            <p className="text-[11px] text-orange-100">
-              Order by <span className="text-yellow-300 font-medium">8pm tonight</span> for tomorrow
+          <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 relative z-10" style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
+            <Clock size={12} style={{ color: '#F0B429', flexShrink: 0 }} />
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              Order by <span style={{ color: '#F0B429', fontWeight: 600 }}>8pm tonight</span> for tomorrow's delivery
             </p>
-            {hoursLeft > 0 && <span className="ml-auto text-[11px] font-medium text-yellow-300">{hoursLeft}h left</span>}
+            {hoursLeft > 0 && <span className="ml-auto text-[11px] font-semibold flex-shrink-0" style={{ color: '#F0B429' }}>{hoursLeft}h left</span>}
           </div>
         )}
       </div>
 
       {/* Categories */}
       <div className="px-5 pt-4 pb-2">
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={clsx('flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-medium border transition-all', activeCategory === cat ? 'text-white border-transparent' : 'bg-white text-[#7A6A5A] border-[#E8DDD0]')}
-              style={activeCategory === cat ? { background: '#BF4E2A' } : {}}>
+            <button key={cat} onClick={() => setCategory(cat)}
+              className="flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-medium border transition-all"
+              style={category === cat ? { background: '#1A3A2A', color: '#F0B429', borderColor: '#1A3A2A' } : { background: '#fff', color: '#5A6B5A', borderColor: '#D8DDD0' }}>
               {cat}
             </button>
           ))}
@@ -146,89 +116,86 @@ export default function HomePage() {
       </div>
 
       {/* Kitchen cards */}
-      <div className="px-5 pt-2">
+      <div className="px-5 pt-2 space-y-3">
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-3xl h-48 animate-pulse border border-[#EDE5DA]" />
-            ))}
-          </div>
+          [1,2,3].map(i => <div key={i} className="rounded-3xl h-48 animate-pulse" style={{ background: '#E8EDE8' }} />)
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-[32px] mb-3">🍽️</p>
-            <p className="text-[14px] font-medium text-[#2C1810] mb-1">No kitchens found</p>
-            <p className="text-[12px] text-[#9A8A7A]">Try a different search or category</p>
+            <p className="text-[14px] font-semibold" style={{ color: '#1A3A2A' }}>No kitchens found</p>
+            <p className="text-[12px] mt-1" style={{ color: '#5A6B5A' }}>Try a different search or category</p>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map(kitchen => {
-              const todayMeal = getTodayMeal(kitchen.weeklyMeals);
-              if (!todayMeal) return null;
-              return (
-                <Link key={kitchen.id} href={`/kitchen/${kitchen.id}`}>
-                  <div className="bg-white rounded-3xl overflow-hidden border border-[#EDE5DA] shadow-sm active:scale-[0.99] transition-transform">
-                    <div className="h-1.5" style={{ background: kitchen.isHalal ? 'linear-gradient(90deg,#BF4E2A,#E07A54)' : 'linear-gradient(90deg,#2D7A4F,#52B788)' }} />
-                    <div className="p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: 'linear-gradient(135deg,#FFF0E6,#FFE0CC)' }}>
-                          {todayMeal.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                            <span className="text-[11px] font-medium text-[#9A8A7A]">{kitchen.name}</span>
-                            {kitchen.isHalal && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FFF0E6] text-[#BF4E2A]">Halal</span>}
-                            {kitchen.isVeg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#E8F5EE] text-[#2D7A4F]">Veg</span>}
-                            {!kitchen.isOpen && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#F5EDE4] text-[#9A8A7A]">Coming soon</span>}
-                          </div>
-                          <h3 className="text-[16px] font-medium text-[#2C1810] leading-snug mb-1">{todayMeal.name}</h3>
-                          <p className="text-[11px] text-[#9A8A7A] leading-relaxed line-clamp-2">{todayMeal.description}</p>
-                        </div>
-                      </div>
+        ) : filtered.map(kitchen => {
+          const meal = getTodayMeal(kitchen.weeklyMeals);
+          if (!meal) return null;
+          return (
+            <Link key={kitchen.id} href={`/kitchen/${kitchen.id}`}>
+              <div className="bg-white rounded-3xl overflow-hidden border active:scale-[0.99] transition-transform" style={{ borderColor: '#D8DDD0', boxShadow: '0 2px 12px rgba(26,58,42,0.06)' }}>
+                {/* Top stripe */}
+                <div className="h-1" style={{ background: `linear-gradient(90deg, #1A3A2A, #2D6A4A)` }} />
 
-                      {kitchen.isOpen && (
-                        <>
-                          <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#F5EDE4]">
-                            <div className="flex items-center gap-1">
-                              <Star size={11} className="fill-amber-400 text-amber-400" />
-                              <span className="text-[11px] font-medium text-[#2C1810]">{kitchen.rating || 'New'}</span>
-                            </div>
-                            <div className="w-px h-3 bg-[#E8DDD0]" />
-                            <span className="text-[11px] text-[#9A8A7A]">{todayMeal.protein} protein</span>
-                            <div className="w-px h-3 bg-[#E8DDD0]" />
-                            <span className="text-[11px] text-[#9A8A7A]">{todayMeal.calories} cal</span>
-                            <div className="flex-1" />
-                            <span className="text-[14px] font-medium text-[#2C1810]">${kitchen.pricePerMeal}</span>
-                            <span className="text-[12px] font-medium text-white px-3 py-1 rounded-full" style={{ background: '#BF4E2A' }}>Order</span>
-                          </div>
-                          <div className="mt-2.5 flex items-center gap-2 bg-[#FDF8F3] rounded-xl px-3 py-2">
-                            <span className="text-[12px]">📦</span>
-                            <span className="text-[11px] text-[#9A8A7A]">Weekly package</span>
-                            <span className="text-[11px] font-medium text-[#2C1810]">${kitchen.weeklyPrice}</span>
-                            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#FFF0E6] text-[#BF4E2A]">Save {kitchen.weeklySavingsPct}%</span>
-                          </div>
-                        </>
-                      )}
+                <div className="p-4">
+                  <div className="flex items-start gap-4">
+                    {/* Emoji */}
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: '#FFFBEB' }}>
+                      {meal.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                        <span className="text-[11px] font-medium" style={{ color: '#5A6B5A' }}>{kitchen.name}</span>
+                        {kitchen.isHalal && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#FFFBEB', color: '#C8941A' }}>Halal</span>}
+                        {kitchen.isVeg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#E8F0E8', color: '#2D6A4A' }}>Veg</span>}
+                        {!kitchen.isOpen && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F0EEE8', color: '#8A9A8A' }}>Coming soon</span>}
+                      </div>
+                      <h3 className="text-[16px] font-semibold leading-snug mb-1" style={{ color: '#1A3A2A', fontFamily: 'Fraunces, serif' }}>{meal.name}</h3>
+                      <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#8A9A8A' }}>{meal.description}</p>
                     </div>
                   </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
 
-        {/* AI planner */}
+                  {kitchen.isOpen && (
+                    <>
+                      <div className="flex items-center gap-3 mt-3 pt-3" style={{ borderTop: '0.5px solid #EEF0EA' }}>
+                        <div className="flex items-center gap-1">
+                          <Star size={11} className="fill-amber-400 text-amber-400" />
+                          <span className="text-[11px] font-medium" style={{ color: '#1A3A2A' }}>{kitchen.rating || 'New'}</span>
+                          {kitchen.reviewCount > 0 && <span className="text-[10px]" style={{ color: '#A8B4A8' }}>({kitchen.reviewCount})</span>}
+                        </div>
+                        <div className="w-px h-3" style={{ background: '#D8DDD0' }} />
+                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>{meal.protein} protein</span>
+                        <div className="w-px h-3" style={{ background: '#D8DDD0' }} />
+                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>{meal.calories} cal</span>
+                        <div className="flex-1" />
+                        <span className="text-[15px] font-bold" style={{ color: '#1A3A2A' }}>${kitchen.pricePerMeal}</span>
+                        <span className="text-[12px] font-semibold text-white px-3 py-1.5 rounded-full" style={{ background: '#1A3A2A' }}>Order →</span>
+                      </div>
+
+                      <div className="mt-2.5 flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: '#FFFBEB' }}>
+                        <span className="text-[13px]">📦</span>
+                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>Weekly package</span>
+                        <span className="text-[11px] font-semibold" style={{ color: '#1A3A2A' }}>${kitchen.weeklyPrice}</span>
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#F0B429', color: '#1A3A2A' }}>Save {kitchen.weeklySavingsPct}%</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+
+        {/* AI Planner */}
         <Link href="/planner">
-          <div className="mt-4 rounded-3xl p-4 flex items-center gap-3 border border-[#E8DDD0] bg-white shadow-sm">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#BF4E2A,#8C3118)' }}>
+          <div className="rounded-3xl p-4 flex items-center gap-3 bg-white border" style={{ borderColor: '#D8DDD0', boxShadow: '0 2px 12px rgba(26,58,42,0.06)' }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#1A3A2A,#2D6A4A)' }}>
               <Sparkles size={18} className="text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-medium tracking-wider mb-0.5 text-[#BF4E2A]">AI MEAL PLANNER</p>
-              <p className="text-[14px] font-medium text-[#2C1810]">Build your perfect week</p>
-              <p className="text-[11px] text-[#9A8A7A]">Set goals · AI picks your meals</p>
+              <p className="text-[9px] font-bold tracking-wider mb-0.5" style={{ color: '#F0B429' }}>AI MEAL PLANNER</p>
+              <p className="text-[14px] font-semibold" style={{ color: '#1A3A2A', fontFamily: 'Fraunces, serif' }}>Build your perfect week</p>
+              <p className="text-[11px]" style={{ color: '#8A9A8A' }}>Set goals · AI picks your meals</p>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#FFF0E6] flex items-center justify-center">
-              <span className="text-[#BF4E2A] text-[14px]">→</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#FFFBEB' }}>
+              <span style={{ color: '#F0B429', fontSize: 14, fontWeight: 700 }}>→</span>
             </div>
           </div>
         </Link>
