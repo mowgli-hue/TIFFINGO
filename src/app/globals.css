@@ -1,18 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --green:    #C8522A;
-  --green-dk: #A03E1A;
-  --green-lt: #FFF0E6;
-  --dark:     #2C1810;
-  --cream:    #FDF8F3;
-  --gray:     #7A6A5A;
-  --gray-lt:  #F5EDE4;
-  --border:   #E8DDD0;
+  --brand:     #F07B22;
+  --brand-dk:  #C85E0A;
+  --brand-lt:  #FEF0E3;
+  --dark:      #1C1C1A;
+  --dark-2:    #2A2A28;
+  --cream:     #FAFAF5;
+  --warm:      #F5F0E8;
+  --gray:      #6B6B68;
+  --gray-lt:   #E8E8E3;
+  --border:    #EAEAE5;
+  --gold:      #F5C842;
+  --green:     #2D9B6F;
+  --green-lt:  #E3F5EE;
 }
 
 * { box-sizing: border-box; }
@@ -24,10 +29,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.card { background: #fff; border: 0.5px solid var(--border); border-radius: 14px; }
-.badge-green { display: inline-flex; align-items: center; gap: 4px; background: var(--green-lt); color: var(--green-dk); font-size: 10px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
-input, select, textarea { outline: none; font-family: inherit; }
-input:focus, select:focus, textarea:focus { border-color: var(--green) !important; box-shadow: 0 0 0 3px rgba(200,82,42,0.08); }
+.font-serif { font-family: 'Playfair Display', Georgia, serif; }
+
+.card {
+  background: #fff;
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary:hover { background: var(--brand-dk); }
+.btn-dark { background: var(--dark); color: #fff; }
+
+input, select, textarea {
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(240,123,34,0.12);
+}
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
