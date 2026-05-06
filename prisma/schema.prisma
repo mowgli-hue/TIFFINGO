@@ -1,12 +1,11 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -19,7 +18,7 @@ model User {
   city          String?
   postalCode    String?
   stripeId      String?
-  goals         String[]       // e.g. ["High protein", "Halal only"]
+  goals         String[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   orders        Order[]
@@ -28,65 +27,90 @@ model User {
 }
 
 model Kitchen {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  cuisine     String
-  type        String    // "tiffin" | "restaurant"
-  address     String
-  city        String
-  lat         Float?
-  lng         Float?
-  imageUrl    String?
-  rating      Float     @default(0)
-  reviewCount Int       @default(0)
-  isOpen      Boolean   @default(true)
-  isHalal     Boolean   @default(false)
-  isVeg       Boolean   @default(false)
-  commissionPct Float   @default(10)
-  createdAt   DateTime  @default(now())
-  menuItems   MenuItem[]
-  orders      Order[]
-  subscriptions Subscription[]
-  reviews     Review[]
+  id              String         @id @default(cuid())
+  name            String
+  tagline         String?
+  description     String?
+  cuisine         String
+  type            String
+  address         String
+  city            String
+  lat             Float?
+  lng             Float?
+  imageUrl        String?
+  rating          Float          @default(0)
+  reviewCount     Int            @default(0)
+  isOpen          Boolean        @default(true)
+  isHalal         Boolean        @default(false)
+  isVeg           Boolean        @default(false)
+  pricePerMeal    Float          @default(10)
+  weeklyPrice     Float          @default(45)
+  weeklySavingsPct Int           @default(15)
+  cutoffTime      String         @default("8:00pm")
+  deliverySlots   String[]
+  commissionPct   Float          @default(10)
+  createdAt       DateTime       @default(now())
+  menuItems       MenuItem[]
+  orders          Order[]
+  subscriptions   Subscription[]
+  reviews         Review[]
+  weeklyMeals     WeeklyMeal[]
 }
 
-model MenuItem {
+model WeeklyMeal {
   id          String   @id @default(cuid())
   kitchenId   String
   kitchen     Kitchen  @relation(fields: [kitchenId], references: [id])
+  day         String
+  date        String?
+  emoji       String   @default("🍛")
+  name        String
+  description String?
+  protein     String?
+  calories    Int?
+  tags        String[]
+  weekOf      DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  kitchenId   String
+  kitchen     Kitchen     @relation(fields: [kitchenId], references: [id])
   name        String
   description String?
   price       Float
   calories    Int?
   protein     Int?
   imageUrl    String?
-  isAvailable Boolean  @default(true)
-  tags        String[] // e.g. ["Halal", "High protein"]
+  isAvailable Boolean     @default(true)
+  tags        String[]
   orderItems  OrderItem[]
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  userId       String
-  user         User        @relation(fields: [userId], references: [id])
-  kitchenId    String
-  kitchen      Kitchen     @relation(fields: [kitchenId], references: [id])
-  status       OrderStatus @default(PENDING)
-  totalAmount  Float
-  deliveryFee  Float       @default(0)
-  address      String
-  driverName   String?
-  driverPhone  String?
-  driverLat    Float?
-  driverLng    Float?
-  estimatedEta DateTime?
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+  kitchenId       String
+  kitchen         Kitchen      @relation(fields: [kitchenId], references: [id])
+  status          OrderStatus  @default(PENDING)
+  totalAmount     Float
+  deliveryFee     Float        @default(0)
+  address         String
+  deliverySlot    String?
+  isWeekly        Boolean      @default(false)
+  mealDay         String?
+  mealName        String?
+  driverName      String?
+  driverPhone     String?
+  estimatedEta    DateTime?
   stripePaymentId String?
   subscriptionId  String?
   subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  items        OrderItem[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  items           OrderItem[]
 }
 
 model OrderItem {
@@ -100,23 +124,23 @@ model OrderItem {
 }
 
 model Subscription {
-  id             String           @id @default(cuid())
-  userId         String
-  user           User             @relation(fields: [userId], references: [id])
-  kitchenId      String
-  kitchen        Kitchen          @relation(fields: [kitchenId], references: [id])
-  plan           SubscriptionPlan
-  status         SubStatus        @default(ACTIVE)
-  mealsPerWeek   Int
-  pricePerWeek   Float
-  deliveryDays   String[]         // ["Mon","Wed","Fri"]
-  deliveryTime   String           // "12:00-13:00"
-  stripeSubId    String?
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  kitchenId       String
+  kitchen         Kitchen          @relation(fields: [kitchenId], references: [id])
+  plan            SubscriptionPlan @default(WEEKLY)
+  status          SubStatus        @default(ACTIVE)
+  mealsPerWeek    Int              @default(5)
+  pricePerWeek    Float
+  deliveryDays    String[]
+  deliveryTime    String           @default("12:00-13:00")
+  stripeSubId     String?
   nextBillingDate DateTime?
-  startDate      DateTime         @default(now())
-  cancelledAt    DateTime?
-  createdAt      DateTime         @default(now())
-  orders         Order[]
+  startDate       DateTime         @default(now())
+  cancelledAt     DateTime?
+  createdAt       DateTime         @default(now())
+  orders          Order[]
 }
 
 model Review {
@@ -125,7 +149,7 @@ model Review {
   user      User     @relation(fields: [userId], references: [id])
   kitchenId String
   kitchen   Kitchen  @relation(fields: [kitchenId], references: [id])
-  rating    Int      // 1-5
+  rating    Int
   comment   String?
   createdAt DateTime @default(now())
 }
