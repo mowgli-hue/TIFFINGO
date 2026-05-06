@@ -20,7 +20,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: 'TiffinGo — Homemade food. Delivered.',
-  description: 'Order fresh homemade meals from local kitchens in Surrey & Vancouver. Daily delivery, weekly plans.',
+  description: 'Order fresh homemade meals from local kitchens in Surrey & Vancouver.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,14 +33,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#1C1C1A',
-              color: '#FAFAF5',
+              background: '#1A2E1A',
+              color: '#F5F2E8',
               fontSize: '13px',
               fontFamily: 'DM Sans, sans-serif',
               borderRadius: '12px',
               padding: '12px 16px',
             },
-            success: { iconTheme: { primary: '#F07B22', secondary: '#fff' } },
+            success: { iconTheme: { primary: '#E8A020', secondary: '#1A2E1A' } },
           }}
         />
       </body>
