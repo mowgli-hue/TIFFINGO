@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowLeft, Heart, Star, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import { MOCK_KITCHENS, WEEKLY_MEALS, isPastCutoff, hoursUntilCutoff } from '@/lib/mock-data';
@@ -56,7 +57,7 @@ export default function KitchenPage() {
 
         {/* Kitchen info */}
       {/* AI Plan Builder entry */}
-      <Link href={`/kitchen/${kitchenId}/plan`}>
+      <Link href={`/kitchen/${id}/plan`}>
         <div className="rounded-2xl p-4 flex items-center gap-3 mx-5 mt-4" style={{background:'#1A3A2A'}}>
           <span style={{fontSize:18}}>✨</span>
           <div className="flex-1">
