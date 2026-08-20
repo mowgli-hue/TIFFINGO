@@ -101,17 +101,17 @@ export default function PlannerPage() {
   const avgCal = Math.round(meals.reduce((s, m) => s + m.calories, 0) / meals.length);
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] pb-24 flex flex-col">
+    <div className="min-h-screen bg-[#F5F5F0] pb-24 flex flex-col">
       {/* Header */}
-      <div className="bg-[#FDF8F3] px-5 pt-14 pb-3 flex items-center justify-between">
+      <div className="bg-[#F5F5F0] px-5 pt-14 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#E8DDD0] rounded-full flex items-center justify-center">
-            <ArrowLeft size={14} className="text-[#2C1810]" />
+          <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#D8DDD0] rounded-full flex items-center justify-center">
+            <ArrowLeft size={14} className="text-[#1A3A2A]" />
           </button>
-          <h1 className="font-serif text-[19px] text-[#2C1810]">AI meal planner</h1>
+          <h1 className="font-serif text-[19px] text-[#1A3A2A]">AI meal planner</h1>
         </div>
-        <div className="flex items-center gap-1.5 bg-[#FFF0E6] rounded-xl px-2.5 py-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#C8522A] animate-pulse" />
+        <div className="flex items-center gap-1.5 bg-[#FFFBEB] rounded-xl px-2.5 py-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#1A3A2A] animate-pulse" />
           <span className="text-[10px] font-medium text-[#0F6E56]">Active</span>
         </div>
       </div>
@@ -121,15 +121,15 @@ export default function PlannerPage() {
         {messages.map((msg, i) => (
           <div key={i} className={clsx('flex', msg.role === 'user' ? 'justify-end' : 'items-end gap-2')}>
             {msg.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-[#FFF0E6] flex items-center justify-center flex-shrink-0 mb-0.5">
+              <div className="w-6 h-6 rounded-full bg-[#FFFBEB] flex items-center justify-center flex-shrink-0 mb-0.5">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#1D9E75" strokeWidth="1.1"/><path d="M4 6h4M6 4v4" stroke="#1D9E75" strokeWidth="1.1" strokeLinecap="round"/></svg>
               </div>
             )}
             <div className={clsx(
               'max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed',
               msg.role === 'user'
-                ? 'bg-[#2C1810] text-white rounded-br-sm'
-                : 'bg-white border border-[#E8DDD0] text-[#2C1810] rounded-bl-sm'
+                ? 'bg-[#1A3A2A] text-white rounded-br-sm'
+                : 'bg-white border border-[#D8DDD0] text-[#1A3A2A] rounded-bl-sm'
             )}>
               {msg.content}
             </div>
@@ -137,10 +137,10 @@ export default function PlannerPage() {
         ))}
         {typing && (
           <div className="flex items-end gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#FFF0E6] flex items-center justify-center flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-[#FFFBEB] flex items-center justify-center flex-shrink-0">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#1D9E75" strokeWidth="1.1"/><path d="M4 6h4M6 4v4" stroke="#1D9E75" strokeWidth="1.1" strokeLinecap="round"/></svg>
             </div>
-            <div className="bg-white border border-[#E8DDD0] px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5">
+            <div className="bg-white border border-[#D8DDD0] px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1.5">
               {[0, 0.18, 0.36].map(d => (
                 <div key={d} className="w-1.5 h-1.5 rounded-full bg-[#B4B2A9] animate-bounce" style={{ animationDelay: `${d}s` }} />
               ))}
@@ -149,16 +149,16 @@ export default function PlannerPage() {
         )}
       </div>
 
-      <div className="border-t border-[#E8DDD0]" />
+      <div className="border-t border-[#D8DDD0]" />
 
       {/* Weekly plan */}
       <div className="px-5 py-3">
         <div className="flex items-center justify-between mb-2.5">
           <div>
-            <p className="text-[12px] font-medium text-[#2C1810]">This week&apos;s plan</p>
-            <p className="text-[10px] text-[#9A8A7A]">Tailored · High protein · Halal</p>
+            <p className="text-[12px] font-medium text-[#1A3A2A]">This week&apos;s plan</p>
+            <p className="text-[10px] text-[#8A9A8A]">Tailored · High protein · Halal</p>
           </div>
-          <button onClick={regenerate} className="flex items-center gap-1 bg-[#FFF0E6] text-[#0F6E56] px-2.5 py-1 rounded-lg text-[10px] font-medium">
+          <button onClick={regenerate} className="flex items-center gap-1 bg-[#FFFBEB] text-[#0F6E56] px-2.5 py-1 rounded-lg text-[10px] font-medium">
             <RefreshCw size={10} />
             Regenerate
           </button>
@@ -166,16 +166,16 @@ export default function PlannerPage() {
 
         {meals.map((meal, i) => (
           <div key={meal.day} className={clsx('flex items-center gap-2.5 py-2', i < meals.length - 1 && 'border-b border-[#F1EFE8]')}>
-            <span className="text-[11px] font-medium text-[#9A8A7A] w-8 flex-shrink-0">{meal.day}</span>
-            <div className="flex-1 bg-white border border-[#E8DDD0] rounded-xl px-3 py-2 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-[#8A9A8A] w-8 flex-shrink-0">{meal.day}</span>
+            <div className="flex-1 bg-white border border-[#D8DDD0] rounded-xl px-3 py-2 flex items-center justify-between">
               <div>
-                <p className="text-[12px] font-medium text-[#2C1810]">{meal.name}</p>
-                <p className="text-[10px] text-[#9A8A7A]">{meal.kitchen}</p>
+                <p className="text-[12px] font-medium text-[#1A3A2A]">{meal.name}</p>
+                <p className="text-[10px] text-[#8A9A8A]">{meal.kitchen}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-[#C8522A]">{meal.protein} protein</span>
+                <span className="text-[10px] font-medium text-[#1A3A2A]">{meal.protein} protein</span>
                 <button onClick={() => swapMeal(meal.day)} className="w-6 h-6 rounded-full bg-[#F1EFE8] flex items-center justify-center">
-                  <RefreshCw size={10} className="text-[#9A8A7A]" />
+                  <RefreshCw size={10} className="text-[#8A9A8A]" />
                 </button>
               </div>
             </div>
@@ -183,15 +183,15 @@ export default function PlannerPage() {
         ))}
 
         {/* Nutrition strip */}
-        <div className="mt-3 bg-white border border-[#E8DDD0] rounded-xl overflow-hidden flex">
+        <div className="mt-3 bg-white border border-[#D8DDD0] rounded-xl overflow-hidden flex">
           {[
             { val: avgCal.toLocaleString(), label: 'avg cal/day',    fill: '#1D9E75', pct: 78 },
             { val: `${avgProtein}g`,        label: 'protein/meal',   fill: '#534AB7', pct: 85 },
             { val: '100%',                  label: 'halal verified', fill: '#BA7517', pct: 100 },
           ].map((n, i) => (
-            <div key={n.label} className={clsx('flex-1 px-2 py-2.5 text-center', i < 2 && 'border-r border-[#E8DDD0]')}>
-              <p className="text-[13px] font-medium text-[#2C1810]">{n.val}</p>
-              <p className="text-[9px] text-[#9A8A7A] mb-1.5">{n.label}</p>
+            <div key={n.label} className={clsx('flex-1 px-2 py-2.5 text-center', i < 2 && 'border-r border-[#D8DDD0]')}>
+              <p className="text-[13px] font-medium text-[#1A3A2A]">{n.val}</p>
+              <p className="text-[9px] text-[#8A9A8A] mb-1.5">{n.label}</p>
               <div className="h-1 bg-[#F1EFE8] rounded-full mx-2 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${n.pct}%`, background: n.fill }} />
               </div>
@@ -207,12 +207,12 @@ export default function PlannerPage() {
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && sendMessage()}
           placeholder="Swap a meal, add a goal..."
-          className="flex-1 border border-[#E8DDD0] rounded-xl px-3.5 py-2.5 text-[12px] text-[#2C1810] placeholder-[#B4B2A9] bg-white"
+          className="flex-1 border border-[#D8DDD0] rounded-xl px-3.5 py-2.5 text-[12px] text-[#1A3A2A] placeholder-[#B4B2A9] bg-white"
         />
         <button
           onClick={sendMessage}
           disabled={!input.trim() || loading}
-          className="w-10 h-10 rounded-full bg-[#2C1810] flex items-center justify-center disabled:opacity-40"
+          className="w-10 h-10 rounded-full bg-[#1A3A2A] flex items-center justify-center disabled:opacity-40"
         >
           <Send size={14} className="text-white" />
         </button>
@@ -220,7 +220,7 @@ export default function PlannerPage() {
 
       {/* CTA */}
       <div className="px-5 pb-4">
-        <button className="w-full py-3 bg-[#2C1810] text-white rounded-2xl text-[13px] font-medium">
+        <button className="w-full py-3 bg-[#1A3A2A] text-white rounded-2xl text-[13px] font-medium">
           Confirm this week&apos;s plan
         </button>
       </div>

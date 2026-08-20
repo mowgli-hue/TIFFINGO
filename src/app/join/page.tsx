@@ -35,11 +35,11 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#FAFAF5' }}>
+    <div className="min-h-screen" style={{ background: '#F5F5F0' }}>
       {/* Header */}
-      <div style={{ background: '#1C1C1A' }} className="px-5 pt-14 pb-6">
+      <div style={{ background: '#1A3A2A' }} className="px-5 pt-14 pb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F07B22' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F0B429' }}>
             <ChefHat size={20} className="text-white" />
           </div>
           <div>
@@ -54,12 +54,12 @@ export default function JoinPage() {
             <div key={s} className="flex items-center flex-1">
               <div className="flex items-center gap-1.5">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all"
-                  style={{ background: i <= step ? '#F07B22' : '#333330', color: i <= step ? '#fff' : '#666' }}>
+                  style={{ background: i <= step ? '#F0B429' : '#333330', color: i <= step ? '#fff' : '#666' }}>
                   {i < step ? <Check size={11} /> : i + 1}
                 </div>
-                <span className="text-[10px] font-medium" style={{ color: i === step ? '#F07B22' : i < step ? '#9FE1CB' : '#666' }}>{s}</span>
+                <span className="text-[10px] font-medium" style={{ color: i === step ? '#F0B429' : i < step ? '#9FE1CB' : '#666' }}>{s}</span>
               </div>
-              {i < STEPS.length - 1 && <div className="flex-1 h-px mx-2" style={{ background: i < step ? '#F07B22' : '#333' }} />}
+              {i < STEPS.length - 1 && <div className="flex-1 h-px mx-2" style={{ background: i < step ? '#F0B429' : '#333' }} />}
             </div>
           ))}
         </div>
@@ -111,11 +111,11 @@ export default function JoinPage() {
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.isHalal} onChange={set('isHalal')} className="w-4 h-4 rounded accent-orange-500" />
-                <span className="text-[13px] text-[#1C1C1A]">Halal certified</span>
+                <span className="text-[13px] text-[#1A3A2A]">Halal certified</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.isVeg} onChange={set('isVeg')} className="w-4 h-4 rounded" />
-                <span className="text-[13px] text-[#1C1C1A]">Vegetarian only</span>
+                <span className="text-[13px] text-[#1A3A2A]">Vegetarian only</span>
               </label>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function JoinPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4">
-              <p className="text-[13px] font-medium text-[#1C1C1A] mb-1">How does TiffinGo pricing work?</p>
+              <p className="text-[13px] font-medium text-[#1A3A2A] mb-1">How does TiffinGo pricing work?</p>
               <p className="text-[12px] text-[#6B6B68] leading-relaxed">You set the meal price. TiffinGo takes 10% commission. The rest goes to you every Sunday. For weekly packages we suggest a 15-20% discount to encourage subscriptions.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -157,16 +157,16 @@ export default function JoinPage() {
                     <button key={slot} type="button"
                       onClick={() => setForm(f => ({ ...f, deliverySlots: active ? f.deliverySlots.filter(s => s !== slot) : [...f.deliverySlots, slot] }))}
                       className="flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all"
-                      style={{ background: active ? '#F07B22' : '#F5F0E8', color: active ? '#fff' : '#6B6B68', borderColor: active ? '#F07B22' : 'transparent' }}>
+                      style={{ background: active ? '#F0B429' : '#F5F0E8', color: active ? '#fff' : '#6B6B68', borderColor: active ? '#F0B429' : 'transparent' }}>
                       {slot}
                     </button>
                   );
                 })}
               </div>
             </div>
-            <div className="bg-[#FEF0E3] border border-[#F07B22]/30 rounded-2xl p-4">
-              <p className="text-[12px] font-medium text-[#C85E0A] mb-1">Your estimated weekly earnings</p>
-              <p className="text-[24px] font-semibold text-[#1C1C1A]">
+            <div className="bg-[#FFFBEB] border border-[#F0B429]/30 rounded-2xl p-4">
+              <p className="text-[12px] font-medium text-[#C8941A] mb-1">Your estimated weekly earnings</p>
+              <p className="text-[24px] font-semibold text-[#1A3A2A]">
                 ${Math.round(Number(form.weeklyPrice) * 0.9 * 4).toLocaleString()}
                 <span className="text-[13px] font-normal text-[#6B6B68]">/month</span>
               </p>
@@ -180,8 +180,8 @@ export default function JoinPage() {
           <div className="space-y-4">
             <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign size={16} className="text-[#F07B22]" />
-                <p className="text-[13px] font-medium text-[#1C1C1A]">Automatic weekly payouts</p>
+                <DollarSign size={16} className="text-[#F0B429]" />
+                <p className="text-[13px] font-medium text-[#1A3A2A]">Automatic weekly payouts</p>
               </div>
               <p className="text-[12px] text-[#6B6B68] leading-relaxed">Every Sunday, TiffinGo automatically deposits your earnings directly to your bank account. No invoices, no chasing payments.</p>
             </div>
@@ -210,7 +210,7 @@ export default function JoinPage() {
         {step === 3 && (
           <div className="space-y-4">
             <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4 space-y-3">
-              <p className="text-[14px] font-semibold text-[#1C1C1A]">Partnership agreement</p>
+              <p className="text-[14px] font-semibold text-[#1A3A2A]">Partnership agreement</p>
               {[
                 { icon: '💰', title: '10% commission', desc: 'TiffinGo takes 10% of each order. You keep 90%. Paid every Sunday.' },
                 { icon: '🎁', title: '0% for first 90 days', desc: 'As a launch partner, you pay zero commission for your first 3 months.' },
@@ -221,7 +221,7 @@ export default function JoinPage() {
                 <div key={t.title} className="flex items-start gap-3">
                   <span className="text-xl flex-shrink-0">{t.icon}</span>
                   <div>
-                    <p className="text-[12px] font-medium text-[#1C1C1A]">{t.title}</p>
+                    <p className="text-[12px] font-medium text-[#1A3A2A]">{t.title}</p>
                     <p className="text-[11px] text-[#6B6B68]">{t.desc}</p>
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export default function JoinPage() {
             <button
               onClick={() => setStep(s => s + 1)}
               className="flex-1 py-3.5 rounded-2xl text-[14px] font-semibold text-white flex items-center justify-center gap-2"
-              style={{ background: '#F07B22' }}>
+              style={{ background: '#F0B429' }}>
               Continue <ArrowRight size={16} />
             </button>
           ) : (
@@ -253,14 +253,14 @@ export default function JoinPage() {
               onClick={handleSubmit}
               disabled={!form.agree || loading}
               className="flex-1 py-3.5 rounded-2xl text-[14px] font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: loading ? '#F07B22' : '#1C1C1A' }}>
+              style={{ background: loading ? '#F0B429' : '#1A3A2A' }}>
               {loading ? 'Submitting...' : 'Submit & go live 🚀'}
             </button>
           )}
         </div>
 
         <p className="text-center text-[11px] text-[#AEAEAD] mt-4">
-          Already a merchant? <Link href="/dashboard" className="text-[#F07B22] font-medium">Go to dashboard</Link>
+          Already a merchant? <Link href="/dashboard" className="text-[#F0B429] font-medium">Go to dashboard</Link>
         </p>
       </div>
     </div>

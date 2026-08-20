@@ -44,13 +44,13 @@ function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F3] pb-8">
+    <div className="min-h-screen bg-[#F5F5F0] pb-8">
       {/* Header */}
-      <div className="bg-[#FDF8F3] px-5 pt-14 pb-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#E8DDD0] rounded-full flex items-center justify-center">
-          <ArrowLeft size={14} className="text-[#2C1810]" />
+      <div className="bg-[#F5F5F0] px-5 pt-14 pb-3 flex items-center gap-3">
+        <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#D8DDD0] rounded-full flex items-center justify-center">
+          <ArrowLeft size={14} className="text-[#1A3A2A]" />
         </button>
-        <h1 className="font-serif text-[19px] text-[#2C1810]">Checkout</h1>
+        <h1 className="font-serif text-[19px] text-[#1A3A2A]">Checkout</h1>
       </div>
 
       {/* Step indicator */}
@@ -60,33 +60,33 @@ function CheckoutPage() {
             <div className="flex items-center gap-1.5">
               <div className={clsx(
                 'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium',
-                i < step ? 'bg-[#9A8A7A]' : i === step ? 'bg-[#2C1810] text-white' : 'bg-[#F1EFE8] text-[#9A8A7A]'
+                i < step ? 'bg-[#8A9A8A]' : i === step ? 'bg-[#1A3A2A] text-white' : 'bg-[#F1EFE8] text-[#8A9A8A]'
               )}>
                 {i < step
                   ? <Check size={11} className="text-white" />
                   : i + 1}
               </div>
-              <span className={clsx('text-[10px] font-medium', i === step ? 'text-[#2C1810]' : i < step ? 'text-[#C8522A]' : 'text-[#B4B2A9]')}>
+              <span className={clsx('text-[10px] font-medium', i === step ? 'text-[#1A3A2A]' : i < step ? 'text-[#1A3A2A]' : 'text-[#B4B2A9]')}>
                 {s}
               </span>
             </div>
-            {i < STEPS.length - 1 && <div className="flex-1 h-px bg-[#E8DDD0] mx-2" />}
+            {i < STEPS.length - 1 && <div className="flex-1 h-px bg-[#D8DDD0] mx-2" />}
           </div>
         ))}
       </div>
 
-      <div className="border-t border-[#E8DDD0]" />
+      <div className="border-t border-[#D8DDD0]" />
 
       <div className="px-5 py-4 space-y-4">
         {/* Plan summary */}
         <div>
-          <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2.5">YOUR PLAN</p>
+          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">YOUR PLAN</p>
           <div className="card p-3.5">
             <div className="flex items-center gap-3 pb-3 mb-3 border-b border-[#F1EFE8]">
-              <div className="w-10 h-10 rounded-xl bg-[#FFF0E6] flex items-center justify-center text-xl">🍛</div>
+              <div className="w-10 h-10 rounded-xl bg-[#FFFBEB] flex items-center justify-center text-xl">🍛</div>
               <div>
-                <p className="text-[13px] font-medium text-[#2C1810]">{kitchen?.name ?? 'Kitchen'}</p>
-                <p className="text-[11px] text-[#9A8A7A]">{plan.charAt(0) + plan.slice(1).toLowerCase()} plan · {planData.mealsPerWeek} meals</p>
+                <p className="text-[13px] font-medium text-[#1A3A2A]">{kitchen?.name ?? 'Kitchen'}</p>
+                <p className="text-[11px] text-[#8A9A8A]">{plan.charAt(0) + plan.slice(1).toLowerCase()} plan · {planData.mealsPerWeek} meals</p>
               </div>
             </div>
 
@@ -97,37 +97,37 @@ function CheckoutPage() {
             ].map(row => (
               <div key={row.label} className="flex justify-between text-[12px] mb-1.5">
                 <span className="text-[#5F5E5A]">{row.label}</span>
-                <span className={clsx(row.strike && 'line-through text-[#B4B2A9]', row.green && 'text-[#C8522A] font-medium')}>
+                <span className={clsx(row.strike && 'line-through text-[#B4B2A9]', row.green && 'text-[#1A3A2A] font-medium')}>
                   {row.value}
                 </span>
               </div>
             ))}
 
-            <div className="flex justify-between pt-2.5 mt-1.5 border-t border-[#E8DDD0]">
-              <span className="text-[13px] font-medium text-[#2C1810]">Weekly total</span>
-              <span className="text-[16px] font-medium text-[#2C1810]">${planData.pricePerWeek.toFixed(2)}</span>
+            <div className="flex justify-between pt-2.5 mt-1.5 border-t border-[#D8DDD0]">
+              <span className="text-[13px] font-medium text-[#1A3A2A]">Weekly total</span>
+              <span className="text-[16px] font-medium text-[#1A3A2A]">${planData.pricePerWeek.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         {/* Delivery */}
         <div>
-          <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2.5">DELIVERY ADDRESS</p>
+          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">DELIVERY ADDRESS</p>
           <div className="card p-3.5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFF0E6] flex items-center justify-center">
-                  <MapPin size={14} className="text-[#C8522A]" />
+                <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] flex items-center justify-center">
+                  <MapPin size={14} className="text-[#1A3A2A]" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-[#2C1810]">123 Main Street, Apt 4B</p>
-                  <p className="text-[11px] text-[#9A8A7A]">Vancouver, BC · V6B 1A1</p>
+                  <p className="text-[13px] font-medium text-[#1A3A2A]">123 Main Street, Apt 4B</p>
+                  <p className="text-[11px] text-[#8A9A8A]">Vancouver, BC · V6B 1A1</p>
                 </div>
               </div>
-              <button className="text-[11px] text-[#C8522A] font-medium">Change</button>
+              <button className="text-[11px] text-[#1A3A2A] font-medium">Change</button>
             </div>
 
-            <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
+            <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
             <div className="flex gap-1.5">
               {DELIVERY_SLOTS.map((slot) => (
                 <button
@@ -141,12 +141,12 @@ function CheckoutPage() {
                   className={clsx(
                     'flex-1 rounded-xl py-2 text-center transition-all',
                     selectedDays.includes(slot)
-                      ? 'bg-[#FFF0E6] border border-[#C8522A]'
+                      ? 'bg-[#FFFBEB] border border-[#1A3A2A]'
                       : 'bg-[#F1EFE8] border border-transparent'
                   )}
                 >
                   <p className={clsx('text-[10px] font-medium', selectedDays.includes(slot) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{slot}</p>
-                  <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(slot) ? 'text-[#5DCAA5]' : 'text-[#9A8A7A]')}>{slot}</p>
+                  <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(slot) ? 'text-[#5DCAA5]' : 'text-[#8A9A8A]')}>{slot}</p>
                 </button>
               ))}
             </div>
@@ -155,7 +155,7 @@ function CheckoutPage() {
 
         {/* Payment */}
         <div>
-          <p className="text-[11px] font-medium text-[#9A8A7A] tracking-wider mb-2.5">PAYMENT</p>
+          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">PAYMENT</p>
           <div className="card overflow-hidden">
             {PAYMENT_METHODS.map((pm, i) => (
               <button
@@ -167,23 +167,23 @@ function CheckoutPage() {
                   payMethod === pm.id && 'bg-[#FFF8F4]'
                 )}
               >
-                <div className={clsx('w-5 h-5 rounded-full border-2 flex items-center justify-center', payMethod === pm.id ? 'border-[#C8522A]' : 'border-[#D3D1C7]')}>
-                  {payMethod === pm.id && <div className="w-2.5 h-2.5 rounded-full bg-[#C8522A]" />}
+                <div className={clsx('w-5 h-5 rounded-full border-2 flex items-center justify-center', payMethod === pm.id ? 'border-[#1A3A2A]' : 'border-[#D3D1C7]')}>
+                  {payMethod === pm.id && <div className="w-2.5 h-2.5 rounded-full bg-[#1A3A2A]" />}
                 </div>
-                <div className="w-9 h-6 rounded bg-[#F1EFE8] flex items-center justify-center text-[10px] font-medium text-[#5F5E5A] border border-[#E8DDD0]">
+                <div className="w-9 h-6 rounded bg-[#F1EFE8] flex items-center justify-center text-[10px] font-medium text-[#5F5E5A] border border-[#D8DDD0]">
                   {pm.icon}
                 </div>
                 <div>
-                  <p className="text-[13px] text-[#2C1810]">{pm.label}</p>
-                  <p className="text-[11px] text-[#9A8A7A]">{pm.sub}</p>
+                  <p className="text-[13px] text-[#1A3A2A]">{pm.label}</p>
+                  <p className="text-[11px] text-[#8A9A8A]">{pm.sub}</p>
                 </div>
               </button>
             ))}
             {payMethod === 'new' && (
               <div className="flex gap-2 px-3.5 py-3 border-t border-[#F1EFE8]">
-                <input placeholder="Card number" className="flex-[2] border border-[#E8DDD0] rounded-xl px-3 py-2 text-[12px]" />
-                <input placeholder="MM/YY" className="flex-1 border border-[#E8DDD0] rounded-xl px-3 py-2 text-[12px]" />
-                <input placeholder="CVV" className="w-14 border border-[#E8DDD0] rounded-xl px-3 py-2 text-[12px]" />
+                <input placeholder="Card number" className="flex-[2] border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
+                <input placeholder="MM/YY" className="flex-1 border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
+                <input placeholder="CVV" className="w-14 border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
               </div>
             )}
           </div>
@@ -195,7 +195,7 @@ function CheckoutPage() {
         <button
           onClick={handleConfirm}
           disabled={loading}
-          className="w-full py-3.5 bg-[#2C1810] text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5 disabled:opacity-60"
+          className="w-full py-3.5 bg-[#1A3A2A] text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5 disabled:opacity-60"
         >
           <span>{loading ? 'Processing...' : 'Confirm subscription'}</span>
           <span className="text-[#FFD166] text-[12px]">${planData.pricePerWeek.toFixed(2)}/week</span>
@@ -204,8 +204,8 @@ function CheckoutPage() {
         <div className="flex justify-center gap-5 mt-3">
           {['Cancel anytime', 'Pause anytime', 'Secure checkout'].map(t => (
             <div key={t} className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#C8522A]" />
-              <span className="text-[10px] text-[#9A8A7A]">{t}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#1A3A2A]" />
+              <span className="text-[10px] text-[#8A9A8A]">{t}</span>
             </div>
           ))}
         </div>

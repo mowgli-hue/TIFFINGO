@@ -23,8 +23,8 @@ export default function KitchenPage() {
   const selectedMeal = meals.find(m => m.day === selectedDay) ?? meals[0];
 
   if (!kitchen) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FDF8F3' }}>
-      <p className="text-[#9A8A7A]">Kitchen not found</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}>
+      <p className="text-[#8A9A8A]">Kitchen not found</p>
     </div>
   );
 
@@ -38,10 +38,10 @@ export default function KitchenPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32" style={{ background: '#FDF8F3' }}>
+    <div className="min-h-screen pb-32" style={{ background: '#F5F5F0' }}>
 
       {/* ── Hero ── */}
-      <div className="relative" style={{ background: 'linear-gradient(135deg, #C8522A, #A03E1A)', minHeight: 200 }}>
+      <div className="relative" style={{ background: 'linear-gradient(135deg, #1A3A2A, #2D6A4A)', minHeight: 200 }}>
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)', backgroundSize: '16px 16px' }} />
 
         {/* Back + like */}
@@ -73,7 +73,7 @@ export default function KitchenPage() {
 
       {/* ── Cutoff timer ── */}
       {!pastCutoff && (
-        <div className="mx-5 -mt-3 bg-[#2C1810] rounded-2xl px-4 py-3 flex items-center justify-between relative z-10">
+        <div className="mx-5 -mt-3 bg-[#1A3A2A] rounded-2xl px-4 py-3 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-2">
             <Clock size={14} className="text-yellow-300" />
             <p className="text-[12px] text-white">Order by <span className="text-yellow-300 font-medium">8pm tonight</span> for tomorrow</p>
@@ -84,7 +84,7 @@ export default function KitchenPage() {
 
       {/* ── Weekly meal calendar ── */}
       <div className="px-5 mt-4">
-        <h2 className="font-serif text-[17px] text-[#2C1810] mb-3">This week's meals</h2>
+        <h2 className="font-serif text-[17px] text-[#1A3A2A] mb-3">This week's meals</h2>
 
         <div className="space-y-2.5">
           {meals.map((meal, i) => {
@@ -93,17 +93,17 @@ export default function KitchenPage() {
             return (
               <div
                 key={meal.day}
-                className={clsx('bg-white rounded-2xl border transition-all overflow-hidden', isSelected ? 'border-[#C8522A]' : 'border-[#E8DDD0]')}
-                style={isSelected ? { boxShadow: '0 0 0 1px #C8522A20' } : {}}
+                className={clsx('bg-white rounded-2xl border transition-all overflow-hidden', isSelected ? 'border-[#1A3A2A]' : 'border-[#D8DDD0]')}
+                style={isSelected ? { boxShadow: '0 0 0 1px #1A3A2A20' } : {}}
               >
                 <button
                   className="w-full flex items-center gap-3 p-3.5 text-left"
                   onClick={() => { setSelectedDay(meal.day); setExpandedDay(isExpanded ? null : meal.day); }}
                 >
                   {/* Day pill */}
-                  <div className={clsx('w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0', isSelected ? 'text-white' : 'bg-[#F5EDE4]')} style={isSelected ? { background: '#C8522A' } : {}}>
-                    <span className={clsx('text-[9px] font-medium', isSelected ? 'text-orange-200' : 'text-[#9A8A7A]')}>{meal.day}</span>
-                    <span className={clsx('text-[8px]', isSelected ? 'text-orange-200' : 'text-[#B4A494]')}>{meal.date}</span>
+                  <div className={clsx('w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0', isSelected ? 'text-white' : 'bg-[#EEF0EA]')} style={isSelected ? { background: '#1A3A2A' } : {}}>
+                    <span className={clsx('text-[9px] font-medium', isSelected ? 'text-orange-200' : 'text-[#8A9A8A]')}>{meal.day}</span>
+                    <span className={clsx('text-[8px]', isSelected ? 'text-orange-200' : 'text-[#A8B4A8]')}>{meal.date}</span>
                   </div>
 
                   {/* Emoji */}
@@ -111,35 +111,35 @@ export default function KitchenPage() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-[#2C1810] mb-0.5">{meal.name}</p>
-                    <p className="text-[10px] text-[#9A8A7A]">{meal.protein} protein · {meal.calories} cal</p>
+                    <p className="text-[13px] font-medium text-[#1A3A2A] mb-0.5">{meal.name}</p>
+                    <p className="text-[10px] text-[#8A9A8A]">{meal.protein} protein · {meal.calories} cal</p>
                   </div>
 
                   {/* Price + expand */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[13px] font-medium text-[#2C1810]">${kitchen.pricePerMeal}</span>
-                    {isExpanded ? <ChevronUp size={14} className="text-[#9A8A7A]" /> : <ChevronDown size={14} className="text-[#9A8A7A]" />}
+                    <span className="text-[13px] font-medium text-[#1A3A2A]">${kitchen.pricePerMeal}</span>
+                    {isExpanded ? <ChevronUp size={14} className="text-[#8A9A8A]" /> : <ChevronDown size={14} className="text-[#8A9A8A]" />}
                   </div>
                 </button>
 
                 {/* Expanded details */}
                 {isExpanded && (
-                  <div className="px-3.5 pb-3.5 border-t border-[#F5EDE4]">
-                    <p className="text-[12px] text-[#7A6A5A] leading-relaxed mt-2.5 mb-3">{meal.description}</p>
+                  <div className="px-3.5 pb-3.5 border-t border-[#EEF0EA]">
+                    <p className="text-[12px] text-[#5A6B5A] leading-relaxed mt-2.5 mb-3">{meal.description}</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {meal.tags.map(tag => (
-                        <span key={tag} className="text-[9px] font-medium px-2 py-0.5 rounded-full" style={{ background: '#FFF0E6', color: '#C8522A' }}>{tag}</span>
+                        <span key={tag} className="text-[9px] font-medium px-2 py-0.5 rounded-full" style={{ background: '#FFFBEB', color: '#1A3A2A' }}>{tag}</span>
                       ))}
                     </div>
                     {/* Delivery slot */}
-                    <p className="text-[10px] font-medium text-[#9A8A7A] tracking-wider mb-1.5">DELIVERY SLOT</p>
+                    <p className="text-[10px] font-medium text-[#8A9A8A] tracking-wider mb-1.5">DELIVERY SLOT</p>
                     <div className="flex gap-2">
                       {kitchen.deliverySlots.map(slot => (
                         <button
                           key={slot}
                           onClick={() => setSelectedSlot(slot)}
-                          className={clsx('flex-1 py-2 rounded-xl text-[11px] font-medium border transition-all', selectedSlot === slot ? 'text-white border-[#C8522A]' : 'bg-[#F5EDE4] text-[#7A6A5A] border-transparent')}
-                          style={selectedSlot === slot ? { background: '#C8522A' } : {}}
+                          className={clsx('flex-1 py-2 rounded-xl text-[11px] font-medium border transition-all', selectedSlot === slot ? 'text-white border-[#1A3A2A]' : 'bg-[#EEF0EA] text-[#5A6B5A] border-transparent')}
+                          style={selectedSlot === slot ? { background: '#1A3A2A' } : {}}
                         >
                           {slot}
                         </button>
@@ -154,7 +154,7 @@ export default function KitchenPage() {
       </div>
 
       {/* ── Weekly package card ── */}
-      <div className="mx-5 mt-4 bg-[#2C1810] rounded-2xl p-4">
+      <div className="mx-5 mt-4 bg-[#1A3A2A] rounded-2xl p-4">
         <p className="text-[9px] font-medium text-yellow-300 tracking-wider mb-1.5">WEEKLY PACKAGE</p>
         <p className="text-[15px] font-medium text-white mb-1">All 5 meals · ${kitchen.weeklyPrice}</p>
         <p className="text-[11px] text-orange-300 mb-3">Save {kitchen.weeklySavingsPct}% vs individual orders · Free delivery</p>
@@ -166,24 +166,24 @@ export default function KitchenPage() {
             </div>
           ))}
         </div>
-        <button onClick={handleOrderWeekly} className="w-full py-3 bg-[#C8522A] text-white rounded-xl text-[13px] font-medium">
+        <button onClick={handleOrderWeekly} className="w-full py-3 bg-[#1A3A2A] text-white rounded-xl text-[13px] font-medium">
           Subscribe to this week →
         </button>
       </div>
 
       {/* ── About ── */}
       <div className="px-5 mt-4 pb-4">
-        <p className="text-[12px] text-[#9A8A7A] leading-relaxed">{kitchen.description}</p>
+        <p className="text-[12px] text-[#8A9A8A] leading-relaxed">{kitchen.description}</p>
       </div>
 
       {/* ── Bottom CTA ── */}
-      <div className="fixed bottom-16 left-0 right-0 max-w-md mx-auto px-5 pb-3 bg-[#FDF8F3] border-t border-[#E8DDD0]">
+      <div className="fixed bottom-16 left-0 right-0 max-w-md mx-auto px-5 pb-3 bg-[#F5F5F0] border-t border-[#D8DDD0]">
         <div className="pt-3">
           {selectedMeal && (
             <button
               onClick={handleOrderSingle}
               className="w-full py-3.5 text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5"
-              style={{ background: '#C8522A' }}
+              style={{ background: '#1A3A2A' }}
             >
               <span>Order {selectedMeal.emoji} {selectedMeal.day}'s meal</span>
               <span className="text-orange-200 text-[12px]">${kitchen.pricePerMeal} · {selectedSlot}</span>
