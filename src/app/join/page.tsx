@@ -1,235 +1,291 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChefHat, MapPin, Clock, DollarSign, Check, ArrowRight } from 'lucide-react';
+import { ChefHat, ArrowRight, Check, Plus, X, Sparkles, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
-const STEPS = ['Your kitchen', 'Your menu', 'Payouts', 'Go live'];
+const D = '#1A3A2A', A = '#F0B429', B = '#2D6A4A', LT = '#FFFBEB', BR = '#D8DDD0';
+const STEPS = ['Your kitchen', 'Your menu', 'AI meals', 'Go live'];
+const CUISINES = ['Indian', 'Punjabi', 'Pakistani', 'South Indian', 'Chinese', 'Healthy', 'Fusion', 'Cafe', 'Other'];
 
-const CUISINES = ['Indian', 'Punjabi', 'Pakistani', 'South Indian', 'Chinese', 'Healthy', 'Fusion', 'Other'];
+type MenuItem = { name: string; price: string };
+type Meal = { day: string; emoji: string; name: string; description: string; protein: string; calories: number; tags: string[] };
 
 export default function JoinPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [meals, setMeals] = useState<Meal[]>([]);
+
   const [form, setForm] = useState({
-    name: '', tagline: '', cuisine: '', type: 'tiffin',
+    name: '', tagline: '', cuisine: '', type: 'restaurant',
     address: '', city: 'Surrey', phone: '', email: '',
     isHalal: false, isVeg: false,
     pricePerMeal: '12', weeklyPrice: '50',
     cutoffTime: '8:00pm', deliverySlots: ['12:00pm – 1:00pm'],
-    bankName: '', accountNum: '', transitNum: '',
-    signature: '', agree: false,
+    agree: false,
   });
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+    { name: '', price: '' },
+    { name: '', price: '' },
+    { name: '', price: '' },
+  ]);
+
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }));
+
+  const setMenu = (i: number, k: 'name' | 'price') => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setMenuItems(items => items.map((item, idx) => idx === i ? { ...item, [k]: e.target.value } : item));
+
+  const validMenu = menuItems.filter(m => m.name.trim() && m.price.trim());
+
+  async function generateMeals() {
+    if (validMenu.length < 3) { toast.error('Add at least 3 menu items'); return; }
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/generate-meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menuItems: validMenu, kitchenName: form.name, isHalal: form.isHalal, isVeg: form.isVeg }),
+      });
+      const data = await res.json();
+      if (data.meals) {
+        setMeals(data.meals);
+        toast.success('Your weekly meals are ready!');
+      } else throw new Error();
+    } catch {
+      toast.error('Generation failed — try again');
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handleSubmit() {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1800));
-    setLoading(false);
-    toast.success('Application submitted! We\'ll be in touch within 24 hours.');
-    router.push('/join/success');
+    try {
+      const res = await fetch('/api/merchant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kitchen: form, meals }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Application submitted! Pending approval.');
+      router.push('/join/success');
+    } catch {
+      toast.error('Submission failed — try again');
+    } finally {
+      setLoading(false);
+    }
   }
+
+  const inputCls = 'w-full border rounded-2xl px-4 py-3 text-[14px] bg-white';
+  const inputStyle = { borderColor: BR, color: D };
+  const labelStyle = { color: '#5A6B5A' };
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F0' }}>
       {/* Header */}
-      <div style={{ background: '#1A3A2A' }} className="px-5 pt-14 pb-6">
+      <div style={{ background: `linear-gradient(160deg, ${D}, ${B})` }} className="px-5 pt-14 pb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F0B429' }}>
-            <ChefHat size={20} className="text-white" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: A }}>
+            <ChefHat size={20} style={{ color: D }} />
           </div>
           <div>
-            <h1 className="text-[18px] font-semibold text-white">Join TiffinGo</h1>
-            <p className="text-[11px] text-gray-400">Start selling in under 10 minutes</p>
+            <h1 className="text-[18px] font-bold text-white" style={{ fontFamily: 'Fraunces, serif' }}>Join TiffinGo</h1>
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>Your menu becomes weekly meals — automatically</p>
           </div>
         </div>
-
-        {/* Steps */}
         <div className="flex items-center">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1">
               <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all"
-                  style={{ background: i <= step ? '#F0B429' : '#333330', color: i <= step ? '#fff' : '#666' }}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style={{ background: i <= step ? A : 'rgba(255,255,255,0.12)', color: i <= step ? D : 'rgba(255,255,255,0.4)' }}>
                   {i < step ? <Check size={11} /> : i + 1}
                 </div>
-                <span className="text-[10px] font-medium" style={{ color: i === step ? '#F0B429' : i < step ? '#9FE1CB' : '#666' }}>{s}</span>
+                <span className="text-[10px] font-medium" style={{ color: i === step ? A : 'rgba(255,255,255,0.4)' }}>{s}</span>
               </div>
-              {i < STEPS.length - 1 && <div className="flex-1 h-px mx-2" style={{ background: i < step ? '#F0B429' : '#333' }} />}
+              {i < STEPS.length - 1 && <div className="flex-1 h-px mx-2" style={{ background: i < step ? A : 'rgba(255,255,255,0.15)' }} />}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="px-5 py-5 max-w-lg mx-auto">
+      <div className="px-5 py-5 max-w-lg mx-auto pb-10">
 
-        {/* Step 0 — Kitchen info */}
+        {/* STEP 0 — Kitchen info */}
         {step === 0 && (
           <div className="space-y-4">
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">KITCHEN NAME</p>
-              <input value={form.name} onChange={set('name')} placeholder="e.g. Ghar Ka Khana" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-            </div>
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">TAGLINE</p>
-              <input value={form.tagline} onChange={set('tagline')} placeholder="e.g. Home cooking. Nothing more." className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-            </div>
+            <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>KITCHEN / RESTAURANT NAME</p>
+              <input value={form.name} onChange={set('name')} placeholder="e.g. The Chai Bar" className={inputCls} style={inputStyle} /></div>
+            <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>TAGLINE (OPTIONAL)</p>
+              <input value={form.tagline} onChange={set('tagline')} placeholder="e.g. Authentic chai. Real street food." className={inputCls} style={inputStyle} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">CUISINE TYPE</p>
-                <select value={form.cuisine} onChange={set('cuisine')} className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white">
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>CUISINE</p>
+                <select value={form.cuisine} onChange={set('cuisine')} className={inputCls} style={inputStyle}>
                   <option value="">Select...</option>
                   {CUISINES.map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">KITCHEN TYPE</p>
-                <select value={form.type} onChange={set('type')} className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white">
-                  <option value="tiffin">Home kitchen</option>
+                </select></div>
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>TYPE</p>
+                <select value={form.type} onChange={set('type')} className={inputCls} style={inputStyle}>
                   <option value="restaurant">Restaurant</option>
-                </select>
-              </div>
+                  <option value="tiffin">Home kitchen</option>
+                </select></div>
             </div>
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">ADDRESS</p>
-              <input value={form.address} onChange={set('address')} placeholder="123 Main St, Surrey, BC" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
+            <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>ADDRESS</p>
+              <input value={form.address} onChange={set('address')} placeholder="123 Main St, Surrey, BC" className={inputCls} style={inputStyle} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>PHONE</p>
+                <input value={form.phone} onChange={set('phone')} type="tel" placeholder="+1 604 000 0000" className={inputCls} style={inputStyle} /></div>
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>EMAIL</p>
+                <input value={form.email} onChange={set('email')} type="email" placeholder="you@example.com" className={inputCls} style={inputStyle} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">PHONE</p>
-                <input value={form.phone} onChange={set('phone')} placeholder="+1 604 000 0000" type="tel" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">EMAIL</p>
-                <input value={form.email} onChange={set('email')} placeholder="you@example.com" type="email" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-              </div>
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>PRICE PER MEAL ($)</p>
+                <input value={form.pricePerMeal} onChange={set('pricePerMeal')} type="number" className={inputCls} style={inputStyle} /></div>
+              <div><p className="text-[11px] font-semibold mb-1.5" style={labelStyle}>WEEKLY PACKAGE ($)</p>
+                <input value={form.weeklyPrice} onChange={set('weeklyPrice')} type="number" className={inputCls} style={inputStyle} /></div>
             </div>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.isHalal} onChange={set('isHalal')} className="w-4 h-4 rounded accent-orange-500" />
-                <span className="text-[13px] text-[#1A3A2A]">Halal certified</span>
+                <input type="checkbox" checked={form.isHalal} onChange={set('isHalal')} className="w-4 h-4 rounded" />
+                <span className="text-[13px]" style={{ color: D }}>Halal</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.isVeg} onChange={set('isVeg')} className="w-4 h-4 rounded" />
-                <span className="text-[13px] text-[#1A3A2A]">Vegetarian only</span>
+                <span className="text-[13px]" style={{ color: D }}>Vegetarian only</span>
               </label>
             </div>
           </div>
         )}
 
-        {/* Step 1 — Menu & pricing */}
+        {/* STEP 1 — Menu */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4">
-              <p className="text-[13px] font-medium text-[#1A3A2A] mb-1">How does TiffinGo pricing work?</p>
-              <p className="text-[12px] text-[#6B6B68] leading-relaxed">You set the meal price. TiffinGo takes 10% commission. The rest goes to you every Sunday. For weekly packages we suggest a 15-20% discount to encourage subscriptions.</p>
+            <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
+              <p className="text-[13px] font-semibold mb-1" style={{ color: D }}>Add your menu items</p>
+              <p className="text-[12px] leading-relaxed" style={{ color: '#8A9A8A' }}>Just the name and price. Our AI reads your menu and automatically creates your weekly meal combos in the next step. Add at least 3 items — the more you add, the better the combos.</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">PRICE PER MEAL ($)</p>
-                <input value={form.pricePerMeal} onChange={set('pricePerMeal')} type="number" placeholder="12" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">WEEKLY PACKAGE ($)</p>
-                <input value={form.weeklyPrice} onChange={set('weeklyPrice')} type="number" placeholder="50" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-              </div>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">ORDER CUTOFF TIME</p>
-              <select value={form.cutoffTime} onChange={set('cutoffTime')} className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white">
-                <option>6:00pm</option>
-                <option>7:00pm</option>
-                <option>8:00pm</option>
-                <option>9:00pm</option>
-              </select>
-              <p className="text-[11px] text-[#6B6B68] mt-1.5">Customers must order before this time for next-day delivery</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-2 tracking-wide">DELIVERY SLOTS</p>
-              <div className="flex gap-2">
-                {['12:00pm – 1:00pm', '5:00pm – 6:00pm', '6:00pm – 7:00pm'].map(slot => {
-                  const active = form.deliverySlots.includes(slot);
-                  return (
-                    <button key={slot} type="button"
-                      onClick={() => setForm(f => ({ ...f, deliverySlots: active ? f.deliverySlots.filter(s => s !== slot) : [...f.deliverySlots, slot] }))}
-                      className="flex-1 py-2.5 rounded-xl text-[11px] font-medium border transition-all"
-                      style={{ background: active ? '#F0B429' : '#F5F0E8', color: active ? '#fff' : '#6B6B68', borderColor: active ? '#F0B429' : 'transparent' }}>
-                      {slot}
+
+            <div className="space-y-2">
+              {menuItems.map((item, i) => (
+                <div key={i} className="flex gap-2">
+                  <input value={item.name} onChange={setMenu(i, 'name')} placeholder={`Item ${i + 1} — e.g. Masala Chai`}
+                    className="flex-[3] border rounded-xl px-3.5 py-2.5 text-[13px] bg-white" style={inputStyle} />
+                  <input value={item.price} onChange={setMenu(i, 'price')} placeholder="$" type="number"
+                    className="flex-1 border rounded-xl px-3.5 py-2.5 text-[13px] bg-white" style={inputStyle} />
+                  {menuItems.length > 3 && (
+                    <button onClick={() => setMenuItems(items => items.filter((_, idx) => idx !== i))}
+                      className="w-9 flex items-center justify-center rounded-xl" style={{ background: '#F0EEE8' }}>
+                      <X size={13} style={{ color: '#8A9A8A' }} />
                     </button>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
+              ))}
             </div>
-            <div className="bg-[#FFFBEB] border border-[#F0B429]/30 rounded-2xl p-4">
-              <p className="text-[12px] font-medium text-[#C8941A] mb-1">Your estimated weekly earnings</p>
-              <p className="text-[24px] font-semibold text-[#1A3A2A]">
-                ${Math.round(Number(form.weeklyPrice) * 0.9 * 4).toLocaleString()}
-                <span className="text-[13px] font-normal text-[#6B6B68]">/month</span>
+
+            <button onClick={() => setMenuItems(items => [...items, { name: '', price: '' }])}
+              className="w-full py-3 rounded-2xl text-[13px] font-medium flex items-center justify-center gap-2 border-2 border-dashed"
+              style={{ borderColor: BR, color: '#5A6B5A', background: 'transparent' }}>
+              <Plus size={15} /> Add another item
+            </button>
+
+            <div className="rounded-2xl p-3.5 flex items-center gap-2.5" style={{ background: LT, border: `0.5px solid ${A}` }}>
+              <Sparkles size={15} style={{ color: '#C8941A', flexShrink: 0 }} />
+              <p className="text-[11px]" style={{ color: '#C8941A' }}>
+                <strong>{validMenu.length} items added.</strong> {validMenu.length >= 3 ? 'Ready for AI meal generation →' : `Add ${3 - validMenu.length} more to continue.`}
               </p>
-              <p className="text-[11px] text-[#6B6B68] mt-1">Based on {form.weeklyPrice}/week × 4 weeks × 90% (after 10% commission)</p>
             </div>
           </div>
         )}
 
-        {/* Step 2 — Bank details */}
+        {/* STEP 2 — AI generated meals */}
         {step === 2 && (
           <div className="space-y-4">
-            <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign size={16} className="text-[#F0B429]" />
-                <p className="text-[13px] font-medium text-[#1A3A2A]">Automatic weekly payouts</p>
+            {meals.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: LT }}>
+                  <Sparkles size={24} style={{ color: A }} />
+                </div>
+                <p className="text-[16px] font-bold mb-2" style={{ color: D, fontFamily: 'Fraunces, serif' }}>Let AI build your week</p>
+                <p className="text-[13px] mb-6 max-w-xs mx-auto leading-relaxed" style={{ color: '#8A9A8A' }}>
+                  Our AI will read your {validMenu.length} menu items and create 5 balanced daily meal combos for Monday to Friday.
+                </p>
+                <button onClick={generateMeals} disabled={generating}
+                  className="px-8 py-3.5 rounded-2xl text-[14px] font-bold disabled:opacity-60"
+                  style={{ background: D, color: A }}>
+                  {generating ? '✨ Creating your meals...' : '✨ Generate my weekly meals'}
+                </button>
               </div>
-              <p className="text-[12px] text-[#6B6B68] leading-relaxed">Every Sunday, TiffinGo automatically deposits your earnings directly to your bank account. No invoices, no chasing payments.</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">BANK NAME</p>
-              <input value={form.bankName} onChange={set('bankName')} placeholder="e.g. RBC, TD, Scotiabank" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">TRANSIT NUMBER</p>
-                <input value={form.transitNum} onChange={set('transitNum')} placeholder="12345" maxLength={5} className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white font-mono" />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-[#6B6B68] mb-1.5 tracking-wide">ACCOUNT NUMBER</p>
-                <input value={form.accountNum} onChange={set('accountNum')} placeholder="1234567" className="w-full border border-[#EAEAE5] rounded-2xl px-4 py-3 text-[14px] bg-white font-mono" />
-              </div>
-            </div>
-            <div className="bg-[#E3F5EE] border border-[#2D9B6F]/30 rounded-2xl p-4">
-              <p className="text-[12px] font-medium text-[#2D9B6F] mb-1">🔒 Your data is secure</p>
-              <p className="text-[11px] text-[#2D9B6F]/80 leading-relaxed">Bank details are encrypted and processed through Stripe. TiffinGo never stores your full account information.</p>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="text-[14px] font-bold" style={{ color: D, fontFamily: 'Fraunces, serif' }}>Your AI-generated week</p>
+                  <button onClick={generateMeals} disabled={generating}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl"
+                    style={{ background: LT, color: '#C8941A' }}>
+                    <RefreshCw size={11} className={generating ? 'animate-spin' : ''} />
+                    Regenerate
+                  </button>
+                </div>
+                <div className="space-y-2.5">
+                  {meals.map(meal => (
+                    <div key={meal.day} className="rounded-2xl p-3.5 bg-white flex items-start gap-3" style={{ border: `0.5px solid ${BR}` }}>
+                      <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center flex-shrink-0" style={{ background: D }}>
+                        <span className="text-[9px] font-bold" style={{ color: A }}>{meal.day}</span>
+                        <span className="text-[14px]">{meal.emoji}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold mb-0.5" style={{ color: D }}>{meal.name}</p>
+                        <p className="text-[11px] leading-relaxed mb-1.5" style={{ color: '#8A9A8A' }}>{meal.description}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px]" style={{ color: '#8A9A8A' }}>{meal.protein} protein</span>
+                          <span className="text-[10px]" style={{ color: '#A8B4A8' }}>·</span>
+                          <span className="text-[10px]" style={{ color: '#8A9A8A' }}>{meal.calories} cal</span>
+                          {meal.tags.map(tag => (
+                            <span key={tag} className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: LT, color: '#C8941A' }}>{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-2xl p-3.5" style={{ background: '#E8F0E8', border: '0.5px solid #52B788' }}>
+                  <p className="text-[11px]" style={{ color: B }}>💡 These combos update automatically each week. You can edit any meal anytime from your dashboard.</p>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* Step 3 — Agreement & go live */}
+        {/* STEP 3 — Agreement */}
         {step === 3 && (
           <div className="space-y-4">
-            <div className="bg-white border border-[#EAEAE5] rounded-2xl p-4 space-y-3">
-              <p className="text-[14px] font-semibold text-[#1A3A2A]">Partnership agreement</p>
+            <div className="rounded-2xl p-4 bg-white space-y-3" style={{ border: `0.5px solid ${BR}` }}>
+              <p className="text-[14px] font-bold" style={{ color: D, fontFamily: 'Fraunces, serif' }}>Partnership terms</p>
               {[
-                { icon: '💰', title: '10% commission', desc: 'TiffinGo takes 10% of each order. You keep 90%. Paid every Sunday.' },
-                { icon: '🎁', title: '0% for first 90 days', desc: 'As a launch partner, you pay zero commission for your first 3 months.' },
-                { icon: '📅', title: 'Weekly meal calendar', desc: 'You set your meals for the week. Customers order by your cutoff time.' },
-                { icon: '🛵', title: 'We handle delivery', desc: 'TiffinGo manages all drivers and delivery logistics. You just cook.' },
-                { icon: '❌', title: 'Cancel anytime', desc: 'No lock-in. Give 7 days notice and you can leave the platform.' },
-              ].map(t => (
-                <div key={t.title} className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{t.icon}</span>
+                { e: '🎁', t: '0% commission for 90 days', d: 'Launch partner offer — keep 100% of every order for 3 months.' },
+                { e: '💰', t: '10% after that', d: 'Uber Eats charges 30%. We charge 10%. You keep 90%.' },
+                { e: '🤖', t: 'AI runs your meal calendar', d: 'Weekly combos auto-generated from your menu. Edit anytime.' },
+                { e: '🛵', t: 'We handle all delivery', d: 'Drivers, logistics, customer support — all TiffinGo.' },
+                { e: '📱', t: 'Evening prep alert', d: 'Every night: "Prep 34 portions tomorrow." That\'s your only job.' },
+                { e: '❌', t: 'Cancel anytime', d: '7 days notice. No lock-in, no penalties.' },
+              ].map(({ e, t, d }) => (
+                <div key={t} className="flex items-start gap-3">
+                  <span className="text-xl flex-shrink-0">{e}</span>
                   <div>
-                    <p className="text-[12px] font-medium text-[#1A3A2A]">{t.title}</p>
-                    <p className="text-[11px] text-[#6B6B68]">{t.desc}</p>
+                    <p className="text-[12px] font-semibold" style={{ color: D }}>{t}</p>
+                    <p className="text-[11px]" style={{ color: '#8A9A8A' }}>{d}</p>
                   </div>
                 </div>
               ))}
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" checked={form.agree} onChange={set('agree')} className="w-4 h-4 mt-0.5 rounded" />
-              <p className="text-[12px] text-[#6B6B68] leading-relaxed">I agree to TiffinGo's merchant terms and confirm the information I've provided is accurate.</p>
+              <p className="text-[12px] leading-relaxed" style={{ color: '#5A6B5A' }}>I agree to TiffinGo's merchant terms and confirm my information is accurate.</p>
             </label>
           </div>
         )}
@@ -237,30 +293,35 @@ export default function JoinPage() {
         {/* Navigation */}
         <div className="flex gap-3 mt-6">
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} className="flex-1 py-3.5 border border-[#EAEAE5] rounded-2xl text-[13px] font-medium text-[#6B6B68] bg-white">
+            <button onClick={() => setStep(s => s - 1)}
+              className="flex-1 py-3.5 rounded-2xl text-[13px] font-medium bg-white"
+              style={{ border: `0.5px solid ${BR}`, color: '#5A6B5A' }}>
               Back
             </button>
           )}
           {step < 3 ? (
             <button
-              onClick={() => setStep(s => s + 1)}
-              className="flex-1 py-3.5 rounded-2xl text-[14px] font-semibold text-white flex items-center justify-center gap-2"
-              style={{ background: '#F0B429' }}>
-              Continue <ArrowRight size={16} />
+              onClick={() => {
+                if (step === 0 && !form.name) { toast.error('Enter your kitchen name'); return; }
+                if (step === 1 && validMenu.length < 3) { toast.error('Add at least 3 menu items'); return; }
+                if (step === 2 && meals.length === 0) { toast.error('Generate your meals first'); return; }
+                setStep(s => s + 1);
+              }}
+              className="flex-1 py-3.5 rounded-2xl text-[14px] font-bold flex items-center justify-center gap-2 text-white"
+              style={{ background: D }}>
+              Continue <ArrowRight size={16} style={{ color: A }} />
             </button>
           ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={!form.agree || loading}
-              className="flex-1 py-3.5 rounded-2xl text-[14px] font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: loading ? '#F0B429' : '#1A3A2A' }}>
+            <button onClick={handleSubmit} disabled={!form.agree || loading}
+              className="flex-1 py-3.5 rounded-2xl text-[14px] font-bold disabled:opacity-50"
+              style={{ background: A, color: D }}>
               {loading ? 'Submitting...' : 'Submit & go live 🚀'}
             </button>
           )}
         </div>
 
-        <p className="text-center text-[11px] text-[#AEAEAD] mt-4">
-          Already a merchant? <Link href="/dashboard" className="text-[#F0B429] font-medium">Go to dashboard</Link>
+        <p className="text-center text-[11px] mt-4" style={{ color: '#A8B4A8' }}>
+          Already a merchant? <Link href="/dashboard" style={{ color: '#C8941A' }} className="font-semibold">Dashboard →</Link>
         </p>
       </div>
     </div>
