@@ -55,6 +55,18 @@ export default function KitchenPage() {
         </div>
 
         {/* Kitchen info */}
+      {/* AI Plan Builder entry */}
+      <Link href={`/kitchen/${kitchenId}/plan`}>
+        <div className="rounded-2xl p-4 flex items-center gap-3 mx-5 mt-4" style={{background:'#1A3A2A'}}>
+          <span style={{fontSize:18}}>✨</span>
+          <div className="flex-1">
+            <p className="text-[13px] font-bold text-white">Build your own week</p>
+            <p className="text-[11px]" style={{color:'rgba(255,255,255,0.5)'}}>AI plans it from this menu — save 15%</p>
+          </div>
+          <span style={{color:'#F0B429'}}>→</span>
+        </div>
+      </Link>
+
         <div className="px-5 pb-6 relative z-10">
           <div className="flex items-center gap-2 mb-2">
             {kitchen.isHalal && <span className="text-[9px] font-medium bg-white/20 text-white px-2 py-0.5 rounded-full">Halal</span>}
