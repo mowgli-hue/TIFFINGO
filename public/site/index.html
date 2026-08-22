@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TiffinGo — What do you want in your tiffin?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1E3A5F; --ink:#16324A; --saffron:#E8A020; --saffron-dk:#C8941A;
+  --sky1:#BCD9E2; --sky2:#DCEEF2; --mut:#4E6B7A; --line:#C3D6DC;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;color:var(--navy);background:linear-gradient(165deg,var(--sky2),var(--sky1));overflow-x:hidden}
+.serif{font-family:'Fraunces',serif}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 5vw;display:flex;justify-content:space-between;align-items:center;transition:.3s}
+nav.scrolled{background:rgba(220,238,242,.85);backdrop-filter:blur(12px);box-shadow:0 1px 0 var(--line)}
+.logo{font-family:'Fraunces',serif;font-weight:600;font-size:22px;color:var(--navy);text-decoration:none}
+.logo span{color:var(--saffron)}
+.nav-cta{background:var(--navy);color:#fff;padding:10px 22px;border-radius:100px;font-size:13px;font-weight:700;text-decoration:none}
+.nav-cta b{color:var(--saffron)}
+
+/* pinned 3D stage */
+.stage-wrap{height:520vh;position:relative}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden}
+#gl{position:absolute;inset:0;display:block}
+.loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:9;background:linear-gradient(165deg,var(--sky2),var(--sky1));transition:opacity .6s}
+.loader.done{opacity:0;pointer-events:none}
+.loader .ring{width:44px;height:44px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--saffron);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader p{font-size:12px;letter-spacing:.18em;font-weight:700;color:var(--mut)}
+
+.copy{position:absolute;inset:0;pointer-events:none;z-index:5}
+.side{position:absolute;top:50%;transform:translateY(-50%);max-width:22ch}
+.side.l{left:5vw;text-align:left}
+.side.r{right:5vw;text-align:right}
+.headline{font-weight:800;font-size:clamp(24px,3.6vw,48px);line-height:1.1;letter-spacing:.01em;text-transform:uppercase;color:var(--navy);opacity:0;transform:translateY(26px);transition:opacity .5s,transform .5s}
+.headline em{font-style:normal;color:var(--saffron-dk)}
+.sub{margin-top:12px;font-size:clamp(12px,1.15vw,15px);font-weight:500;color:var(--mut);opacity:0;transform:translateY(20px);transition:opacity .5s .08s,transform .5s .08s}
+.copyset.on .headline,.copyset.on .sub{opacity:1;transform:none}
+
+.film-cta{position:absolute;bottom:9vh;left:50%;transform:translate(-50%,26px);z-index:6;display:flex;gap:12px;opacity:0;transition:.5s;pointer-events:none;flex-wrap:wrap;justify-content:center}
+.film-cta.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.btn-gold{background:var(--saffron);color:#fff;padding:15px 32px;border-radius:100px;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 14px 30px rgba(232,160,32,.4)}
+.btn-navy{background:var(--navy);color:#fff;padding:15px 32px;border-radius:100px;font-weight:600;font-size:14px;text-decoration:none}
+
+.hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:6;font-size:11px;letter-spacing:.22em;font-weight:700;color:var(--navy);display:flex;flex-direction:column;align-items:center;gap:9px;transition:opacity .4s}
+.hint::after{content:'';width:1.5px;height:38px;background:linear-gradient(to bottom,var(--saffron),transparent);animation:drip 1.8s infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+.dots{position:absolute;right:4vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:11px;z-index:6}
+.pd{width:7px;height:7px;border-radius:50%;background:rgba(30,58,95,.22);transition:.3s}
+.pd.on{background:var(--saffron);transform:scale(1.5)}
+
+@media(max-width:760px){
+  .side{max-width:none;left:6vw!important;right:6vw!important;text-align:center!important;transform:none}
+  .side.l{top:10vh}
+  .side.r{top:auto;bottom:14vh}
+  .headline{font-size:clamp(20px,6.6vw,30px)}
+  .dots{display:none}
+}
+
+/* sections after */
+.how{padding:14vh 6vw;background:linear-gradient(to bottom,var(--sky1),#EAF4F6)}
+.how-inner{max-width:1100px;margin:0 auto}
+.k{display:inline-flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.22em;font-weight:700;color:var(--saffron-dk);margin-bottom:16px}
+.k::before{content:'';width:28px;height:1.5px;background:var(--saffron)}
+.how h2{font-family:'Fraunces',serif;font-size:clamp(30px,4vw,52px);font-weight:600;color:var(--navy)}
+.how h2 em{font-style:italic;color:var(--saffron-dk)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:44px}
+.hcard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:26px;opacity:0;transform:translateY(28px);transition:.6s;box-shadow:0 10px 34px rgba(30,58,95,.08)}
+.hcard.on{opacity:1;transform:none}
+.hcard .ic{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--navy),#2C5580);display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:16px}
+.hcard h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.hcard p{font-size:13px;line-height:1.65;color:var(--mut)}
+
+.band{background:linear-gradient(150deg,var(--ink),#0F2436);color:#fff;padding:16vh 6vw}
+.band-inner{max-width:1100px;margin:0 auto}
+.band .k{color:var(--saffron)}
+.band h2{font-family:'Fraunces',serif;font-size:clamp(32px,4.6vw,60px);font-weight:600;line-height:1.06;max-width:17ch}
+.band h2 em{font-style:italic;color:var(--saffron)}
+.band-lede{font-size:16px;color:rgba(255,255,255,.6);line-height:1.7;max-width:54ch;margin-top:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:48px}
+.stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:26px;opacity:0;transform:translateY(26px);transition:.6s}
+.stat.on{opacity:1;transform:none}
+.stat .n{font-family:'Fraunces',serif;font-size:42px;font-weight:600;color:var(--saffron)}
+.stat .l{font-size:13px;color:rgba(255,255,255,.6);margin-top:6px;line-height:1.5}
+.band .btn-gold{display:inline-block;margin-top:44px}
+
+.final{text-align:center;padding:15vh 6vw;background:#EAF4F6}
+.final h2{font-family:'Fraunces',serif;font-size:clamp(34px,5vw,64px);font-weight:600;color:var(--navy)}
+.final h2 em{font-style:italic;color:var(--saffron-dk)}
+.final p{color:var(--mut);margin-top:14px}
+.final .ctas{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+footer{background:#EAF4F6;border-top:1px solid var(--line);padding:30px 6vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+footer p{font-size:12px;color:var(--mut)}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .copyset .headline,.copyset .sub,.hcard,.stat{opacity:1!important;transform:none!important}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="logo" href="#">Tiffin<span>Go</span></a>
+  <a class="nav-cta" href="https://tiffingo.vercel.app/join">Join as a kitchen <b>→</b></a>
+</nav>
+
+<div class="stage-wrap" id="stageWrap">
+  <section class="stage">
+    <canvas id="gl"></canvas>
+    <div class="loader" id="loader"><div class="ring"></div><p>PACKING YOUR TIFFIN…</p></div>
+
+    <div class="copy">
+      <div class="copyset on" id="c0">
+        <div class="side l"><div class="headline">What do you<br>want</div><div class="sub">Real kitchens near you in Surrey</div></div>
+        <div class="side r"><div class="headline">in <em>your</em><br>tiffin?</div><div class="sub">Scroll — let's open it together</div></div>
+      </div>
+      <div class="copyset" id="c1">
+        <div class="side l"><div class="headline">Pick a<br><em>real</em> kitchen</div><div class="sub">The Chai Bar · Ghar Ka Khana · no ghost kitchens, ever</div></div>
+        <div class="side r"><div class="headline">Cooked<br>this morning</div><div class="sub">Order by 8pm — they prep exactly enough. Zero waste.</div></div>
+      </div>
+      <div class="copyset" id="c2">
+        <div class="side l"><div class="headline">AI plans<br>your <em>week</em></div><div class="sub">Veg or non-veg, your goals — a fresh plan every shuffle. Save 15%.</div></div>
+        <div class="side r"><div class="headline">Chapati.<br>Sabzi. Dal.</div><div class="sub">Every tier packed to your plan from their real menu</div></div>
+      </div>
+      <div class="copyset" id="c3">
+        <div class="side l"><div class="headline">Delivered<br>by <em>lunch</em></div><div class="sub">Hot from the stove to your door, in the slot you pick</div></div>
+        <div class="side r"><div class="headline">Dinner's<br>already planned</div><div class="sub">Launching in Surrey · Vancouver next</div></div>
+      </div>
+    </div>
+
+    <div class="film-cta" id="filmCta">
+      <a class="btn-gold" href="https://tiffingo.vercel.app">Order your week</a>
+      <a class="btn-navy" href="https://tiffingo.vercel.app/join">I run a kitchen</a>
+    </div>
+    <div class="hint" id="hint">SCROLL TO OPEN</div>
+    <div class="dots"><div class="pd on"></div><div class="pd"></div><div class="pd"></div><div class="pd"></div></div>
+  </section>
+</div>
+
+<section class="how">
+  <div class="how-inner">
+    <div class="k">HOW TIFFINGO WORKS</div>
+    <h2>Four steps. <em>Zero</em> thinking.</h2>
+    <div class="cards">
+      <div class="hcard" data-r><div class="ic">🏪</div><h3>Pick a kitchen</h3><p>Real restaurants and home kitchens near you. What they cook is what arrives.</p></div>
+      <div class="hcard" data-r><div class="ic">✨</div><h3>AI builds your week</h3><p>Veg or non-veg, your goals. A personal Monday-to-Friday plan from their menu. Shuffle until perfect — save 15%.</p></div>
+      <div class="hcard" data-r><div class="ic">🌙</div><h3>Order by 8pm</h3><p>Kitchens wake up knowing exactly how many portions to cook. Nothing pre-made.</p></div>
+      <div class="hcard" data-r><div class="ic">🛵</div><h3>Delivered by lunch</h3><p>Our drivers bring it hot to your door in the slot you chose.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="join">
+  <div class="band-inner">
+    <div class="k">FOR RESTAURANTS & HOME KITCHENS</div>
+    <h2>Your menu. Our AI. <em>Zero</em> extra work.</h2>
+    <p class="band-lede">You don't create meal plans — our AI does, from the menu you already cook. We market them, take pre-paid orders, and tell you one thing each evening: how many portions to prep tomorrow.</p>
+    <div class="stats">
+      <div class="stat" data-r><div class="n">0%</div><div class="l">commission for your first 90 days as a launch partner</div></div>
+      <div class="stat" data-r><div class="n">10%</div><div class="l">after that — Uber Eats takes 30%. You keep 90%.</div></div>
+      <div class="stat" data-r><div class="n">10 min</div><div class="l">to onboard: type your menu, AI does the rest</div></div>
+      <div class="stat" data-r><div class="n">$0</div><div class="l">upfront. Weekly payouts every Sunday, straight to your bank</div></div>
+    </div>
+    <a class="btn-gold" href="https://tiffingo.vercel.app/join">Join TiffinGo — 10 minutes →</a>
+  </div>
+</section>
+
+<section class="final">
+  <h2 class="serif">Dinner's <em>already</em> planned.</h2>
+  <p>Launching in Surrey. Vancouver next. Your first week is waiting.</p>
+  <div class="ctas">
+    <a class="btn-gold" href="https://tiffingo.vercel.app">Order your week</a>
+    <a class="btn-navy" href="https://tiffingo.vercel.app/join">Join as a kitchen</a>
+  </div>
+</section>
+
+<footer>
+  <a class="logo" href="#">Tiffin<span>Go</span></a>
+  <p>© 2026 TiffinGo · Surrey, BC · hello@tiffingo.ca</p>
+</footer>
+
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
+const $=id=>document.getElementById(id);
+const nav=$('nav'),wrap=$('stageWrap'),canvas=$('gl'),loader=$('loader');
+const sets=[$('c0'),$('c1'),$('c2'),$('c3')];
+const dots=[...document.querySelectorAll('.pd')];
+const hint=$('hint'),cta=$('filmCta');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const seg=(p,a,b)=>clamp((p-a)/(b-a),0,1);
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* renderer */
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(34,1,0.1,100);
+
+/* lighting — soft studio */
+scene.add(new THREE.HemisphereLight(0xEAF4F6,0x8FA8B4,1.1));
+const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(4,6,5); scene.add(key);
+const rim=new THREE.DirectionalLight(0xE8A020,.7); rim.position.set(-5,3,-4); scene.add(rim);
+const fill=new THREE.DirectionalLight(0xBCD9E2,.8); fill.position.set(-3,-2,4); scene.add(fill);
+
+/* soft ground shadow */
+const shadowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');
+const r=g.createRadialGradient(128,128,10,128,128,120);r.addColorStop(0,'rgba(30,58,95,.28)');r.addColorStop(1,'rgba(30,58,95,0)');
+g.fillStyle=r;g.fillRect(0,0,256,256);return new THREE.CanvasTexture(c);})();
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(3,3),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2;
+
+/* load model */
+const group=new THREE.Group(); scene.add(group);
+let parts=[];   // {mesh, baseY, rank}  sorted top→bottom
+let ready=false, modelH=1;
+
+const gl=new GLTFLoader();
+gl.setMeshoptDecoder(MeshoptDecoder);
+gl.load('tiffin.glb',g=>{
+  const root=g.scene;
+  /* normalize: center + scale to height ~2 */
+  const box=new THREE.Box3().setFromObject(root);
+  const size=box.getSize(new THREE.Vector3());
+  const center=box.getCenter(new THREE.Vector3());
+  const s=2/size.y;
+  root.scale.setScalar(s);
+  root.position.sub(center.multiplyScalar(s));
+  group.add(root);
+  modelH=2;
+  shadow.position.y=-1.15; group.add(shadow);
+
+  /* collect meshes, rank by height (top first) */
+  const meshes=[];
+  root.traverse(o=>{if(o.isMesh){
+    const b=new THREE.Box3().setFromObject(o);
+    meshes.push({mesh:o,cy:(b.min.y+b.max.y)/2,h:b.max.y-b.min.y});
+  }});
+  /* tall spanning mesh (frame/handle) stays put */
+  const maxH=Math.max(...meshes.map(m=>m.h));
+  const movers=meshes.filter(m=>m.h<maxH*.8).sort((a,b)=>b.cy-a.cy);
+  const frames=meshes.filter(m=>m.h>=maxH*.8);
+  parts=movers.map((m,i)=>({...m,rank:i,base:m.mesh.position.clone()}));
+  parts.frames=frames;
+  ready=true;
+  loader.classList.add('done');
+},undefined,()=>{loader.querySelector('p').textContent='COULD NOT LOAD 3D — CHECK tiffin.glb PATH';});
+
+/* separation profiles per rank (top tier flies highest + sideways) */
+const PROF=[
+  {dy:1.5,dx:-0.9,rz:-.25},
+  {dy:0.9,dx:0.95,rz:.2},
+  {dy:0.45,dx:-0.85,rz:-.15},
+  {dy:0.2,dx:0.8,rz:.12},
+];
+
+let P=0;
+function layout(p){
+  P=p;
+  let phase=0;
+  if(p>.78)phase=3;else if(p>.5)phase=2;else if(p>.22)phase=1;
+  sets.forEach((s,i)=>s.classList.toggle('on',i===phase));
+  dots.forEach((d,i)=>d.classList.toggle('on',i===phase));
+  cta.classList.toggle('on',p>.86);
+  hint.style.opacity=p>.04?0:1;
+}
+layout(0);
+
+function tick(t){
+  requestAnimationFrame(tick);
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  if(canvas.width!==w*renderer.getPixelRatio()||canvas.height!==h*renderer.getPixelRatio()){
+    renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();
+  }
+  const p=reduced?0:P;
+
+  /* camera: slow orbit + dolly */
+  const az=lerp(.4,-.9,ease(p))+Math.sin(t*.0002)*.03;
+  const dist=lerp(6.2,7.4,ease(seg(p,.15,.85)));
+  const cy=lerp(.4,.9,ease(p));
+  cam.position.set(Math.sin(az)*dist,cy+Math.sin(t*.0004)*.05,Math.cos(az)*dist);
+  cam.lookAt(0,lerp(0,.3,ease(p)),0);
+
+  /* model: gentle spin + tier separation */
+  group.rotation.y=lerp(0,Math.PI*1.35,ease(p));
+  if(ready){
+    parts.forEach(({mesh,base,rank})=>{
+      const pr=PROF[Math.min(rank,PROF.length-1)];
+      const o=ease(seg(p,.18+rank*.17,.36+rank*.17));
+      mesh.position.set(base.x+pr.dx*o,base.y+pr.dy*o,base.z);
+      mesh.rotation.z=pr.rz*o;
+      mesh.rotation.y=o*.6*(rank%2?-1:1);
+    });
+  }
+  renderer.render(scene,cam);
+}
+requestAnimationFrame(tick);
+
+addEventListener('scroll',()=>{
+  nav.classList.toggle('scrolled',scrollY>40);
+  const r=wrap.getBoundingClientRect();
+  layout(clamp(-r.top/(r.height-innerHeight),0,1));
+},{passive:true});
+
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.3});
+document.querySelectorAll('[data-r]').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
