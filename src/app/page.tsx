@@ -1,207 +1,155 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { Search, Clock, ChevronDown, Sparkles, Star } from 'lucide-react';
-import Link from 'next/link';
-import NavBar from '@/components/NavBar';
-import { CATEGORIES } from '@/lib/mock-data';
-import { useAuth } from '@/store/cart';
-import clsx from 'clsx';
+import type { Metadata } from 'next';
+import './landing.css';
+import TiffinScene from '@/components/TiffinScene';
 
-type WeeklyMeal = { id: string; day: string; emoji: string; name: string; description: string; protein: string; calories: number; tags: string[]; };
-type Kitchen = { id: string; name: string; tagline: string; cuisine: string; type: string; city: string; rating: number; reviewCount: number; isOpen: boolean; isHalal: boolean; isVeg: boolean; pricePerMeal: number; weeklyPrice: number; weeklySavingsPct: number; weeklyMeals: WeeklyMeal[]; };
+export const metadata: Metadata = {
+  title: 'TiffinGo - How homemade finds you',
+  description:
+    'Breakfast, lunch and dinner from the kitchens you already love - planned for your whole week and delivered hot every day. Surrey now, Vancouver next.',
+};
 
-function getTodayMeal(meals: WeeklyMeal[]) {
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const today = days[new Date().getDay()];
-  return meals.find(m => m.day === today) ?? meals[0] ?? null;
-}
+const MARKUP = `<nav id="nav">
+  <a class="logo" href="#"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcoAAABwCAMAAACpZMBJAAAAwFBMVEUAAAADPSf9sQQJRC319fRnbGorWUYYcG5WdGf+tRMrdisyXUycrKT84Wz+/AJIbV5mhHj7uiv/fwD7yFP42Z3+rlP6tyMdSjZ3k4j/AABllG3+wRJwl5CIoZj8wTYA//9rhnv/f38A/wCzxLg1XE1//3/8wjpDblxyjIG5yMT8xEYfSDixsQqqqlX5vEj5vEPSua5///8QPCsUPit/fwAzM2YAAP8zmWZ//7+/AD+/fwCFnZO3t8GrwLf/AP//f/80lG8QAAAAQHRSTlMA/vz8CQnfB2QFBKUlGgKXX6cCWx0LbJlYASH5JFqeAY4CAR9sAmbCiR+UWwMDW5cSAlK7AgUBBQQEBIAZUgEEiLOgswAAGI1JREFUeNrtXQl74ji2FZEsbLyyJUBIyNapTrqqp/rNvH37///qadeVLNsyMB3mfejrriQYDOjobudeXSEUNxL542OX1vkdxXxQmuf5W7NXTyDoOi5/JDP2DynS/E5gOJFD/sogzdMdAXBfx6WOw5TjmOZUoYjtMIhyODma0yuaFyyQHMh9bkTRoqd/NQ/lDUNzdgXzQoHkAvlGoVr1EcXgL/pWXPXsZapW9n/xZk2jAQ0AiScKTfVnvr+CeXmDqdbC1ayOeXT/sM/Ji+vUXZxuJbVwUScOUkyN3uV1/fZbXueUupKpnsHBvArmxYwZc1qhRErMaJ1uChtAElIUaU09qNlIr0HmpQyGREE9F4fWTQdApGFwmkBzIqR0dxXMS1GuKfZw3CsckwRK5WEn6ANECi6c8CX1FcuLQJLkDiz5RrI5XVIpMCMb5SNhKZ/MYs6uc/nVo3CMZF304QgiUFTUWIcq7CfdXWfyq8eOQkUpov5DhH1NHDC5YDZXufza0WArWfko+oY/cQO4IZxeZ/MrR2qRpI30ZsdFo8BjYlHJ9BqXfCGSeuTkCC804XEMBo7s9OtDKzG6rh56r/4DEwOpzXSkR4cTpLbUbKyOTcYNz+FKeiJk+PVab9rjxMU4CMeM5/U6E2O9fq7+BO0q/M8jkUy4vTX2som6zbExaBLEzL3KhO41JHcqJCYfnlSSUz9UzyJfZ1vngSwr/z7xZIJ1AgSfQopzxawz1ROcRE1J0aSRo2maVH86TvmneZ6GWd8pt9ycKqaY/VfXGweymb7KLtK7utY3ZTfap+zPhpzZOGzXC/5jVS4/52x8LssV/zzb7Pn8SBY6jJjcnZze0LEp5qtiCEum2CkeNVJxzxna5Sq5VoTmvagNa6G0PZTiIqcyXaDTAMQQJIKAZF7fGbGsMg7jcn7jjPmSS+XivKJJEKGmIICcqlymXMJlVgVTMn0ZgrIOJrdDQ4EjZz01MSz1FwyzdCkFRQ6C7TDmMgFXdcqOsingSFqFkp5Nx1bMKpLl401r3N/cLFdnB1OzdWzuT1+OCdqZTGY+NCMCSpsRFXkzmOgGiEhM8J1YLjuAVAtLzj5iN7tjoOSi52TT5ZJjhnPKL+gkLN6fCcuSA3nTOR7Z9UV1PvWa6u9NP87xBRKbXIlwfWpsCxSwB8AE/qWu3wmwKNCeEy/u0TwyxEtDyTUQhsl0cRsOZcIZEjvoWaKUatELpFC0DMzs7IYS786zFIUXpRIrg4ujDhQrOGrVqym64/dvXJQJcGOTkMrGuYJyivLAm1CjXu0bnYN7ZCiVN4PjcYWy6jzznuvPvzmfsU+xUlV5/z1nWion3SbTuif8379Ki+CIL/jgiXxr/x4KSqmBsG+CGZQFW9EOlPXpk5Ah8ngTM5ZoW51VvdbojKPWRqffgbBQxo47aNyVpKbA5SE09CoJpXDwAuWgd1xcN7j9PiciWd5EjneyXZzFe5U1OvlZgymiBYdpv0OE2zPsv6ofYoq/uWCkbk4gUOupFWyKA3WgE+HtPZwZygwtY5G8uX8k2+eThbLW36g4J8eR2NRn2rdEVDASL5kYSKVZBCAMhEIJ3B4Fpb3qqFlhKz0Fm5+M5O3NiDFfnahj7YwPUqZVuW3FS/2xvzZEfWvEjSth1dek9aCc6r9KtwdWbmITDCdO8tzEjUrNJ15q3YxcwuxAeaIL+H0cksz5IacFJcKhUwtz1ut+c1VeuX8vtr1YGt6hP7ish7weqF35EK+i2DGEVu5TzzfNNw9N+pYqLZ+6ONO82WzY1Vegn0xy6CQHdj1Cu2ode1KACULtgUVYIbKCWLJ4qRwS+L0OBXvEciptm5Uxf8eYIgZM1a2QL3VvDQhkqHLHralJa+ECcXeuEkc309PMzSLs8dz3YvmOToBypgMR5non/YtsLYLZyhgC9vdfSK+STcTE4XYI7429n8ZyNG6tHtzt5M9C3bvRhI5L3JEc7E/iIM+mUyBeTuUuV6vysmAXX9BeX8b04SQkqwUJ2kNOo7PBafXQdXI8loAd6F+ElVxkc1JtFZIZX0a3vTSFdCSULevTDP7rIOvGIvWumys6vXZYYwJdKOx7XARSPOw77717kprqe05PU69/aQvd0s2nlY8tDfvHKQFJbnitvo++2K7ku61QKUkMpT4GDXGMS3WYzZhsiCF+SxwjmU7tZf6Mg01U8ezY5gMmuQ7o1fF63AWauA5se4Hx1Bi/JzkxYbkOqFcOZJatn+UoOWjl3OMJjkfyBa1w8Du3/Gqi3lRK5bNC9n7eTx7upNBLRTcqsYJhyDjrkks/X4zQL+gVEgQeWAnMvwWjjUPgnsfEIcRLaN3P2Q3Xzk2rNXM3oOyuT2NidcCc9/KNGXqX71ay9Sb+Vp90VQ0tXl3rHJ9n4FDCiKGHCk1mM2+39S8g2pCR/4sPpWsq2/dM0Gw3+FkTXoYwm3VUCC9a3ut7kDFfgycyPyQbCgarqiqfu6IGGuW+ahu+lOrV+Nkr9Dxkizcm2YWOhLJLKhOjcxMzv8kuKTAIQSmZ/qvVzdNkWkD/OP9f9hBwpaQHpp57CLhl+5DEBiau8n0e5lOQjpy0msrP/uxIUv6H+X2b/SDdTk+//tNCqdXpQqmPZYRG0GF3vIZNIqHsfEMgd9S/WkDnOO9UrwNrjW+tSN/e0o3sqUGGCLtHVG075/ZRTmXVbScrWU3C/N6skoUkyC8kmUkiHQ8RPVooV9sS2vR5lG6v48LWQIJsAMrCxC56V0PxwAdkiejDBo5m00z8q+I1D3odPDzom9qyGPJghhRC0uRUR7t5+tHywReepZz3cClVRpjn2qtcuU2D1SSPnyWDc/HsBZXKkvU6PRVaOdCphXSz3A5XMuxUKD8iZdSGMvikN2rZgzf295TUmPqZ6/aw5BF4kNKaMO8WfYAqIxWsEuZH2cc4pUBS6vTWoHw/BnGmfuUKZVmVfemMFfNts76MZ7ua5P5zhdwUJ8E99h98tN8ldJV8wy0aE88K93+MDzuNkEoiwkdTn8PuvXMDylFDxiUvCPJO1r9NgR/F05oUQ55RFY5BUcjcmPJeeRjdkoJ6XI6MFyHch9PVMHbZR+3v0Ax/ZdaOYn/jmAmRwxDx+GEslCrd2Q2loY8ZlCsc4HGl3PajiCW1yKB8wqDXgs5xvckHxW0oaqhdQfYdclDFsFXzYymcgbxD1V1BsF34sadDv4M1kuKYoHKtoHzfOlDOSVwYlOLJqBK2eKmEKaqdmxEZI5BYTsHLDP0KtbCG8jeQTqMNnkxwIHfzzWJZuvTA/fvx4SJbAz3ZlXsYv+RRBUnqs5nPVKmocmi1ueRddPovJhghxjZo5X0klIAWElAGMs+/TbrqxmDzG5ub8f3XwYitR1zR41AdSeYmaet+d79CyoMlUhNoguB3FFfASfGopPx4KKVU/sST6IJav/pLQfkEsyYhKHtk2ygdz3+dH82Qs/DkcbgmaG2DLK+aImwsdRwpPtUPrUFWVTnGWJI4NixawU5cBfuzo/FXEDrnYSws+cuU6VLg4/ZDif0/tJUyC9/wPFlL2MBYZN549kPO/pFJ3yeNJNUMu6NYQk1mzGNK/hJjLPdxyQYFpfH2m0hbSeKBDEQsQiqbaChbRXsmS1h6oUiJjiw+z9D7fUTCuhTlXXqOB8VFW0fFwRprwLDcDn2ivfGTG7Q7RirjoNy7choqxQpDaZLjnq00UP5T313BHVT+2/N6mKms/HThbd/Qz19HVutJ77PGk8FkopvjUmus1JFTBOFDDDuYHmcrmyEFK2YRQIn7OyuGCn9UXPkE6uRtMBKGEPu3Vt+PrfP7vmzyAs37hO3+hohqLbJYBWsQ2q8VOeO7GIIAZp75J+PlJ5VJ4twOYkkUDRtdwTZVqed+BbvyoExmLADEmHriZzeFyNoAt12miUT5bntkocQQyqdWtSXNm2mS3mGvekUGAp4DOycLfyqHNKawflk7dz2/XWblsh1mrlgkQTtY5WDa5hZmKEtj28uIStw7OT93Y6VS7gcLuz2v2N8mgNAHG+S/Pc3Lxz+jgux592ECS11x/u/6LYnkMQeDEfmBlBbbezsWxG4wv2SypbfioCy3q8DOEjFWt63qrkxD+RZnhG9hmGSM+2OEr4313ExHK1jcJZUhKMV4pW0oDQOPXCj97IITjORhKDHPdM1kG+PcqeqUPux5oDQZYfsoYt4u93cZmN41skV4IE3vUEj65sq5NjX0q2EsaUfGKcLt6diFQ9wcsoIy+eOXf0ucKgID5csf4tbJBtswH+f/42W3nkIpsCeXIWB++ItJVObA4Co+62Qo17yYscXI22Cham1EedfSErljab0tlRi6nM8SfY+DEo+GUm9y7pBKHJDKoSqCB7AzqC2VQQX75O1X8Jks23qhdtTXKVB6Bvd+5dyl3BIviaYVX+TmMxVNzhUfv64knTfs+BwN5aQHyp9hKJMIKI0/FFCwnVDq1bWHBShTUx1ql4bP2/n0ZhSUC0e/tmhcP+ApR0Kpbq+hXPBC2EgopQc7Akpb3xzL9hipfIVN+qlfu/EAuHHcDSX/vCAzAggLEq6NglK57C1tjYGy8vRri+32iKBbhEdVXLSgLMdAiY+Dcoi4w20FS7t3LieDbg9QpYYicHc0uPTHBpr1b2GJKUdD6W1SeGxNsbZ2Bkrp68V5sKbeWkOpQ+GIAp9chtSjoBzLwUIoOz1YuIWyXTzZAWXaTQgnaG+lWBVK+MSdPz8xUHqS3c5dV661nGvP8rdISnDp0MPaoy0HPVhCdcx9VDAyCCU+CspoqXT217vbwmdoCrOeNESn+37PAn0OBSPPnv4s22kyL1iRUEbukE0Wbn16pqpE5kMV1baRTD7a7elhe147beUJCvbXEJRPkB6atqHUFQY62vJDwnZat6zW67IsRY+0dbkufeNaZi7cBG2HoLyTtFXMFJuwUi0yQ/ZmQ/pVc7CTMRwsDEY640rDuvlujzW0ngfrbWzuglJGnj6U4r4+lM6q+xYkYXVKEYGKEXfcelD6QAWhdF7EVQc2hFOUz8OEckGErl7FJlb3oIIoGatgu4MRQBGEoJx0QLkBV7ukEgeDEUnYRkD57If3PguLFnBUHm5cVryH/hiGUjQoZJ/xY7CAyqw0tdOgIoreXy2GKNiE+w14xF6DOA+26LSVbnX6EVB6Sa4nUHEZA6UXFAbE0hnPVdtN8tXnMJSNUlDD1ca2BiRzTHuJfgxjU09GVxFAAi0M5UcYyqQFJQpSBJNBigCHMiMelEi5PS6U2dYjvElGhqcWBi+erVyFoHQcI1NANWzE1iKjfW8cayWVtzHFZNKBxdFbDeKgJINQBndyxcaVIJHzBCiCTijFc77pcOPnTa8T6yjbylfHVauAIFCI4Er+3JRpDfs9FcMOsgF/Y17PfSeS5AXOHqG6RHgW7/bg2NSzbtXiQWkLZDuhxD0KFoc82AEosYayndboib2950ppKd248r3lAz+7ObBbWDx5ADOJwj3Pl0uwiYWp2GXHRge+XW0KbtdgU8J9xmBEL0MPShVX4pMoAozDULY8WAEl9hUsW/hlK+zPusojvZ1CIofo0Qxtqfa85CUCBVSesWyDWSGnrl38XQW9HN782DGVUXXTY5NcJOzB8kaJ+FS2x61Of4L1CG0ogYf2rcv+iSRVGSyPXIZ0sUfm6FgerAD/Og8TWgLT4DuRJm/N+9r1w6qyDMywSK5TugFbktXUUjJiowGOylfC8HEcRdBHp/vV6U9wv1AaZHt0iTrqFEumOFtglhlqFZ+bvcifXi1t1eP0zNU080+e2+8qdsBQ2YB63HZ8eaaTPFDYhKrshmPPN9BSORiMOHtGAvnKvswI7qoisNnHOzf5IQsF/jMMpXzdt65YQTbLYmotU5uWt89rLn1rX3h1mO5z8rdwD17py/K72pQn3Eur/Gr1wfKm9yyukF7lvczV2jA3tM1kmtiVAdieSdfeT0ncBaD0PNhe4i7E9oBTVkOZkZaKmMJSrW/QTQzvvYLfIbCxZ7Vdh2PTWy7Uoh1FxsycSydxfmhnek6m5rvaGBrX6rjKpB+Dg7pM0twc066n8EUUGuNgN47TMiMdHGwCGb0joAx4sCkMRgJQBmxlVxXr/PdSwklWwQbcj4ZMKLfLjiotds19KQssKujSE5iRwoFzK5Nd64wHckh4Xwfx617j6G5xTgyjlEdvQ9dsTz+UP3ugxHFQjvFgNZQPERRBl4rVU48662AB875o5cIel6Xo3TQPFU8i27YnMXNPbId4tUM7LdzDV2YzZ27JLs3NSaRYVVokXolWvH61dbA4ZlMeDkLZ6cH2QYkcD9bbaAArsTqgxN881yRmn0BXlrqMbiWrs466b3Vum8Sn7VpsmtdpUbSkkhSNf0awG6dayzW6b8+QVPalnuOSXF0UgbYvPpTi31mPVLplEixg+ByH5e8OVxvdglTur/sXI4M2tDQdsFq1+vLMbnl2y1te31FQN+htpTH3qiejElyA7YkrCOkr0zouX2n2pQf3V/ZysNTP9I/C0qOEtgs0jxJl1REi0bu5rE5MZB+Frs0yXn+GQO9qO/egedVrfGQTtynvdbjibqiKYNIDJZDKtyOhRGRL5kcjidDfQrtGOjdYgmSRTY8kpq9ozObv1lOds1lqE8FNR0klHuxFIKHEYbcHcgdjoHwyLlNbKocVbKt4qU3m9NnJFrX3HGEuwQJQKhC77XfTzt2IvY9L1pzohoJAKMf0VvVTz81QvrJdptVdRbAZULCm+ezEL9PCqqSth4OlAYq1vI9Rso+rYN+0QSyhKFvOEjhnU++QARy3jVhMQG4nbwp6zc7G2Up4zNJQ6tlp7fuLarPTWUXgrDofygbqGVsHC3jEzRipFDEFWcZoyXB2et3aHtIvym84sGO2HrUJHCx0uxEnsQdijmp4zMwRBsFNj1QaDR/2YCXG7SoCI3etYCSFmyY1lL/auCgAJSTgQ8lC5pOshnpDELTocPDZq5c9vdZdJA82H18H8hljgMQeksY7HnfoBZNKuE+5MzPiCp+B8sNLZL44dUYbaN4DUgkcO1A8aT+MD2UCJ4Z25LE4P9OlZh95m9jughFSda0EfpZXFai90TmIxKY40vG9U5x+yYJ9xWpz+LiOxwT0J+voYZ7oE2lUT2X7BiR3LiTdt8ZP7p0J2sNmadLgJPDBwDlu1DmNMfg9eRffIFF3c3PLA4n1tr8WB63albOfS9RuBHGwZzK4ijDFMSrV60Z3QC3f6Yiz2F8beewo/9F1mibZpI06wrRxZI+w120afcHXXIU80VRd9ddHod6UjY3/Evlh/Nf8V6Newt608/uU8vzKz0fQCP/+kR94yJu8DlZw8C53n3OII/sU1Y/QAt/hQK+7mewJH3uy5ATTPchYy3MPQ67HJY/D3+3OJFN9QFdlWWVr1QoUxR0RLFaCeG2WlSvx0qxLJ+ehQ7mm9uzASOUKX7vTSahjzoEkU9UsfdaTNN3LVuts7JylQmaqCfsMzQ6BcpWZuh7qV5LoBu7spu2XoFkS+KjqJdPpQP8TmZ8CmnMd3wWmcs6JzsouGvTFNod3lOFUJZIjJJMf0gsmPQGlN+kZjg78fzOqqlz/+P79x7oc32Krel6X37+X694ukfbcGO8oCAZmQ3GHQgWeImWvAhKQgF36+RXJP3mYdAh98IoDeCfbYP8oW+TduMUjU334dVRPoOs4t1nOFWflh06yvzTkz91fMe9R7Bi0KTiA57yH711HDJLglDhuL4kLJi/2oOBULE2Z0HoXKM7jfYyxH6lex581WCRMYXyYuF4fR7No6ppSKnuNU1rXm8JA7SBpu4al14n9EizB6fR5+xwL5bwQUrBBCBRZV4JTDA5Lvro8XzGcOgy6a6H00iq8a5+Rw8xk3dkW5zr+TMlstVEMWFU5woItMmbY1CWg6jqnX4el9U3doD9GQzPnyD2K/nCd0a8be2qjDUHFjalOb2BNUHrqYXPXcaLvUwAKHdPwPqBAKMMtZ25P+J1cfdcvHzNDoauGuBLMZEggyS7H4KQGur/6rhcglzpPqc88rlX0GFKXBwkyaajTx5rFMlckLwLLxus2nouj5oV0Ji9E+bGHvQo1ya7G2Dtf+crxXMogtS2TktuA8nQfkkrOAFGvsTwtrkhekmBuYDbEnPiX7jTPQ8R+kbxVZqCM63VcjFSKEBG3T+fg7GvOB/V3i+hSgo+rSF6eYH7UoaQzxt3HJQlW4ervXKBgoqJ2T9LA7q/+6Sv5Dl1F8lIFU/YWgAfdYNiF0TnHqJWBvo4LA5NscnuksnO0HBTRWFroOr4OTHluvA044O5KewY5F8jZFciLR1NWEMiN6r7dZPHmRgYf1yTIP8IwzVx4RUj+jZeEUMq7EzS6O8FVIL96/B90sU01+vkaagAAAABJRU5ErkJggg==" alt="TiffinGo"></a>
+  <div class="nlinks">
+    <a href="#how">How it works</a>
+    <a href="#week">Menus</a>
+    <a href="#join">For kitchens</a>
+  </div>
+  <a class="nav-cta" href="https://tiffingo.vercel.app/join">Join as a kitchen <b>&#8594;</b></a>
+</nav>
 
-function hoursUntilCutoff() {
-  const now = new Date();
-  const cutoff = new Date();
-  cutoff.setHours(20, 0, 0, 0);
-  if (now >= cutoff) return 0;
-  return Math.floor((cutoff.getTime() - now.getTime()) / (1000 * 60 * 60));
-}
+<div class="stage-wrap" id="stageWrap">
+  <section class="stage">
+    <canvas id="gl"></canvas>
+    <div class="loader" id="loader"><div class="ring"></div><p>PACKING YOUR TIFFIN&#8230;</p></div>
 
-export default function HomePage() {
-  const { user } = useAuth();
-  const [kitchens, setKitchens] = useState<Kitchen[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState('All');
-  const [search, setSearch] = useState('');
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
-  const hoursLeft = hoursUntilCutoff();
-  const pastCutoff = hoursLeft === 0;
-
-  useEffect(() => {
-    fetch('/api/kitchens?city=Surrey')
-      .then(r => r.json())
-      .then(d => { setKitchens(d.kitchens ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const filtered = kitchens.filter(k => {
-    if (category === 'Halal' && !k.isHalal) return false;
-    if (category === 'Vegetarian' && !k.isVeg) return false;
-    if (category === 'Tiffin' && k.type !== 'tiffin') return false;
-    if (category === 'Restaurant' && k.type !== 'restaurant') return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return k.name.toLowerCase().includes(q) || k.cuisine.toLowerCase().includes(q);
-    }
-    return true;
-  });
-
-  return (
-    <div className="min-h-screen pb-28" style={{ background: '#F5F5F0' }}>
-
-      {/* Hero */}
-      <div style={{ background: 'linear-gradient(160deg, #1A3A2A 0%, #2D6A4A 100%)' }} className="px-5 pt-14 pb-7 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-        <div className="flex items-center justify-between mb-5 relative z-10">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#F0B429' }} />
-            <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>Surrey, BC</span>
-            <ChevronDown size={11} style={{ color: 'rgba(255,255,255,0.4)' }} />
+    <div class="hero">
+      <div class="hero-col">
+        <div class="stack">
+          <div class="copyset on" id="c0">
+            <h1 class="headline">How<br>homemade<span class="y">finds you<span class="dot">.</span></span></h1>
+            <p class="sub">Breakfast, lunch and dinner from the kitchens you already love &#8212; planned for your whole week, delivered hot every day.</p>
           </div>
-          <Link href="/profile">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.12)', border: '0.5px solid rgba(255,255,255,0.2)' }}>
-              <span className="text-[12px] font-semibold text-white">{firstName[0]?.toUpperCase()}</span>
-            </div>
-          </Link>
-        </div>
-
-        <h1 className="text-[32px] font-bold text-white leading-tight mb-1 relative z-10" style={{ fontFamily: 'Fraunces, serif' }}>
-          {greeting},<br />
-          <em style={{ fontStyle: 'italic', color: '#F0B429' }}>{firstName}.</em>
-        </h1>
-        <p className="text-[13px] mb-5 relative z-10" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          {pastCutoff ? "Plan tomorrow's meals 🌙" : "What's cooking today? 🍲"}
-        </p>
-
-        <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 relative z-10" style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
-          <Search size={15} style={{ color: '#A8B4A8', flexShrink: 0 }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search kitchens or cuisine..."
-            className="flex-1 text-[13px] bg-transparent border-none outline-none" style={{ color: '#1A3A2A' }} />
-          {search && <button onClick={() => setSearch('')} style={{ color: '#A8B4A8', fontSize: 11 }}>✕</button>}
-        </div>
-
-        {!pastCutoff && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 relative z-10" style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
-            <Clock size={12} style={{ color: '#F0B429', flexShrink: 0 }} />
-            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              Order by <span style={{ color: '#F0B429', fontWeight: 600 }}>8pm tonight</span> for tomorrow's delivery
-            </p>
-            {hoursLeft > 0 && <span className="ml-auto text-[11px] font-semibold flex-shrink-0" style={{ color: '#F0B429' }}>{hoursLeft}h left</span>}
+          <div class="copyset" id="c1">
+            <h1 class="headline">The kitchens<span class="y">you already love<span class="dot">.</span></span></h1>
+            <p class="sub">The Chai Bar. Home cooks. Cloud kitchens. Pick the place you'd order from anyway &#8212; we bring it as a tiffin.</p>
           </div>
-        )}
-      </div>
-
-      {/* Categories */}
-      <div className="px-5 pt-4 pb-2">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => setCategory(cat)}
-              className="flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-medium border transition-all"
-              style={category === cat ? { background: '#1A3A2A', color: '#F0B429', borderColor: '#1A3A2A' } : { background: '#fff', color: '#5A6B5A', borderColor: '#D8DDD0' }}>
-              {cat}
-            </button>
-          ))}
+          <div class="copyset" id="c2">
+            <h1 class="headline">Lassi today.<span class="y">Rajma tomorrow<span class="dot">.</span></span></h1>
+            <p class="sub">Our AI builds the week from their real menu &#8212; paratha and lassi Monday, something else Tuesday. Shuffle until it's yours.</p>
+          </div>
+          <div class="copyset" id="c3">
+            <h1 class="headline">No groceries.<span class="y">No cooking<span class="dot">.</span></span></h1>
+            <p class="sub">A whole week of home-style meals for less than the shop and the effort. Surrey now &#8212; Vancouver next.</p>
+          </div>
+        </div>
+        <div class="actions" id="acts">
+          <a class="btn-green" href="https://tiffingo.vercel.app">Plan my week <b>&#8594;</b></a>
+          <span class="price">from <b>$50</b> / week</span>
+        </div>
+        <div class="chips" id="chips">
+          <span class="chip"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>Surrey, BC</span>
+          <span class="chip"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v6h6"/></svg>Student plans</span>
+          <span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Veg &amp; non-veg</span>
         </div>
       </div>
-
-      {/* Kitchen cards */}
-      <div className="px-5 pt-2 space-y-3">
-        {loading ? (
-          [1,2,3].map(i => <div key={i} className="rounded-3xl h-48 animate-pulse" style={{ background: '#E8EDE8' }} />)
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-[32px] mb-3">🍽️</p>
-            <p className="text-[14px] font-semibold" style={{ color: '#1A3A2A' }}>No kitchens found</p>
-            <p className="text-[12px] mt-1" style={{ color: '#5A6B5A' }}>Try a different search or category</p>
-          </div>
-        ) : filtered.map(kitchen => {
-          const meal = getTodayMeal(kitchen.weeklyMeals);
-          if (!meal) return null;
-          return (
-            <Link key={kitchen.id} href={`/kitchen/${kitchen.id}`}>
-              <div className="bg-white rounded-3xl overflow-hidden border active:scale-[0.99] transition-transform" style={{ borderColor: '#D8DDD0', boxShadow: '0 2px 12px rgba(26,58,42,0.06)' }}>
-                {/* Top stripe */}
-                <div className="h-1" style={{ background: `linear-gradient(90deg, #1A3A2A, #2D6A4A)` }} />
-
-                <div className="p-4">
-                  <div className="flex items-start gap-4">
-                    {/* Emoji */}
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: '#FFFBEB' }}>
-                      {meal.emoji}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span className="text-[11px] font-medium" style={{ color: '#5A6B5A' }}>{kitchen.name}</span>
-                        {kitchen.isHalal && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#FFFBEB', color: '#C8941A' }}>Halal</span>}
-                        {kitchen.isVeg && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#E8F0E8', color: '#2D6A4A' }}>Veg</span>}
-                        {!kitchen.isOpen && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ background: '#F0EEE8', color: '#8A9A8A' }}>Coming soon</span>}
-                      </div>
-                      <h3 className="text-[16px] font-semibold leading-snug mb-1" style={{ color: '#1A3A2A', fontFamily: 'Fraunces, serif' }}>{meal.name}</h3>
-                      <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: '#8A9A8A' }}>{meal.description}</p>
-                    </div>
-                  </div>
-
-                  {kitchen.isOpen && (
-                    <>
-                      <div className="flex items-center gap-3 mt-3 pt-3" style={{ borderTop: '0.5px solid #EEF0EA' }}>
-                        <div className="flex items-center gap-1">
-                          <Star size={11} className="fill-amber-400 text-amber-400" />
-                          <span className="text-[11px] font-medium" style={{ color: '#1A3A2A' }}>{kitchen.rating || 'New'}</span>
-                          {kitchen.reviewCount > 0 && <span className="text-[10px]" style={{ color: '#A8B4A8' }}>({kitchen.reviewCount})</span>}
-                        </div>
-                        <div className="w-px h-3" style={{ background: '#D8DDD0' }} />
-                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>{meal.protein} protein</span>
-                        <div className="w-px h-3" style={{ background: '#D8DDD0' }} />
-                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>{meal.calories} cal</span>
-                        <div className="flex-1" />
-                        <span className="text-[15px] font-bold" style={{ color: '#1A3A2A' }}>${kitchen.pricePerMeal}</span>
-                        <span className="text-[12px] font-semibold text-white px-3 py-1.5 rounded-full" style={{ background: '#1A3A2A' }}>Order →</span>
-                      </div>
-
-                      <div className="mt-2.5 flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: '#FFFBEB' }}>
-                        <span className="text-[13px]">📦</span>
-                        <span className="text-[11px]" style={{ color: '#8A9A8A' }}>Weekly package</span>
-                        <span className="text-[11px] font-semibold" style={{ color: '#1A3A2A' }}>${kitchen.weeklyPrice}</span>
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#F0B429', color: '#1A3A2A' }}>Save {kitchen.weeklySavingsPct}%</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-
-        {/* AI Planner */}
-        <Link href="/planner">
-          <div className="rounded-3xl p-4 flex items-center gap-3 bg-white border" style={{ borderColor: '#D8DDD0', boxShadow: '0 2px 12px rgba(26,58,42,0.06)' }}>
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#1A3A2A,#2D6A4A)' }}>
-              <Sparkles size={18} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[9px] font-bold tracking-wider mb-0.5" style={{ color: '#F0B429' }}>AI MEAL PLANNER</p>
-              <p className="text-[14px] font-semibold" style={{ color: '#1A3A2A', fontFamily: 'Fraunces, serif' }}>Build your perfect week</p>
-              <p className="text-[11px]" style={{ color: '#8A9A8A' }}>Set goals · AI picks your meals</p>
-            </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#FFFBEB' }}>
-              <span style={{ color: '#F0B429', fontSize: 14, fontWeight: 700 }}>→</span>
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      <NavBar />
     </div>
+
+    <div class="rail"><div class="pd on"></div><div class="pd"></div><div class="pd"></div><div class="pd"></div></div>
+
+    <div class="peek" id="peek">
+      <div class="pcard"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9h18M3 9v11h18V9M9 20v-6h6v6"/></svg></div>
+        <div><h4>Choose a kitchen</h4><small>Chai Bar, home cooks, cloud kitchens</small></div></div>
+      <div class="pcard"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 11h18"/></svg></div>
+        <div><h4>Plan your week</h4><small>See every meal before you pay</small></div></div>
+      <div class="pcard"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M9 17h6M6 17l3-9h6l3 9M9 8L8 5H5"/></svg></div>
+        <div><h4>Delivered daily</h4><small>Hot, in the slot you pick</small></div></div>
+    </div>
+
+    <div class="fadeout"></div>
+    <div class="hint" id="hint">SCROLL TO OPEN</div>
+  </section>
+</div>
+
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="k">HOW TIFFINGO WORKS</div>
+    <h2>Four steps. <em>Zero</em> thinking.</h2>
+    <p class="lede">You already know where you want to eat. TiffinGo turns that place into a week of meals &#8212; breakfast, lunch and dinner &#8212; so you stop shopping, stop cooking, and stop deciding at 7pm.</p>
+    <div class="cards">
+      <div class="hcard" data-r><div class="ic">&#127978;</div><h3>Pick a kitchen</h3><p>Restaurants you already love like The Chai Bar, home cooks in your neighbourhood, and cloud kitchens. What they cook is what arrives.</p></div>
+      <div class="hcard" data-r><div class="ic">&#10024;</div><h3>AI builds your week</h3><p>Veg or non-veg, your budget, your goals. Paratha and lassi Monday, rajma chawal Tuesday &#8212; a full Monday-to-Sunday plan from their real menu. Shuffle until it's right.</p></div>
+      <div class="hcard" data-r><div class="ic">&#127769;</div><h3>Order by 8pm</h3><p>Kitchens wake up knowing exactly how many portions to cook. Nothing pre-made, nothing wasted.</p></div>
+      <div class="hcard" data-r><div class="ic">&#128739;</div><h3>Delivered daily</h3><p>Hot to your door in the slot you chose &#8212; breakfast before class, lunch at the office, dinner when you get home.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="week" id="week">
+  <div class="week-inner">
+    <div class="k">A WEEK ON TIFFINGO</div>
+    <h2 style="font-family:'Fraunces',Georgia,serif;font-size:clamp(32px,4.2vw,56px);font-weight:600;line-height:1.05">You see <em style="font-style:italic;color:var(--yellow-dk)">every meal</em> before you pay.</h2>
+    <p class="lede">No mystery boxes. Every tiffin service on TiffinGo shows exactly what's coming, which day, from which kitchen &#8212; and you can swap anything you don't want.</p>
+    <div class="days">
+      <div class="day" data-r><div class="dn">MONDAY</div><ul>
+        <li><span>AM</span>Aloo paratha &#183; sweet lassi</li>
+        <li><span>PM</span>Rajma chawal &#183; salad</li>
+        <li><span>EVE</span>Dal tadka &#183; 3 rotis</li></ul></div>
+      <div class="day" data-r><div class="dn">TUESDAY</div><ul>
+        <li><span>AM</span>Poha &#183; masala chai</li>
+        <li><span>PM</span>Chole &#183; jeera rice</li>
+        <li><span>EVE</span>Mixed sabzi &#183; roti</li></ul></div>
+      <div class="day" data-r><div class="dn">WEDNESDAY</div><ul>
+        <li><span>AM</span>Idli &#183; sambar</li>
+        <li><span>PM</span>Kadhi chawal</li>
+        <li><span>EVE</span>Paneer bhurji &#183; roti</li></ul></div>
+      <div class="day" data-r><div class="dn">THURSDAY</div><ul>
+        <li><span>AM</span>Besan chilla &#183; chutney</li>
+        <li><span>PM</span>Chicken curry &#183; rice</li>
+        <li><span>EVE</span>Moong dal &#183; roti</li></ul></div>
+    </div>
+    <div class="who">
+      <div class="wcard" data-r><span class="tag">STUDENTS</span><h3>Cheaper than cooking</h3><p>A full week of home-style meals from around $50 &#8212; less than a grocery run, with none of the shopping, prep or washing up. Breakfast before class, dinner after the library.</p></div>
+      <div class="wcard" data-r><span class="tag">NEW TO VANCOUVER</span><h3>Food that tastes like home</h3><p>Missing ghar ka khana in Surrey or Vancouver? Real Indian kitchens cooking the way you grew up eating &#8212; not a restaurant's version of it.</p></div>
+      <div class="wcard" data-r><span class="tag">EVERY TIFFIN SERVICE</span><h3>All in one place</h3><p>Existing tiffin providers list here too. Compare what's actually on the menu each day, pick the one you like, switch whenever you want.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="join">
+  <div class="band-inner">
+    <div class="k">FOR RESTAURANTS, HOME COOKS &amp; CLOUD KITCHENS</div>
+    <h2>Your menu. Our AI. <em>Zero</em> extra work.</h2>
+    <p class="band-lede">You don't create meal plans &#8212; our AI does, from the menu you already cook. We market them, take pre-paid orders, and tell you one thing each evening: how many portions to prep tomorrow.</p>
+    <div class="stats">
+      <div class="stat" data-r><div class="n">0%</div><div class="l">commission for your first 90 days as a launch partner</div></div>
+      <div class="stat" data-r><div class="n">10%</div><div class="l">after that &#8212; Uber Eats takes 30%. You keep 90%.</div></div>
+      <div class="stat" data-r><div class="n">10 min</div><div class="l">to onboard: type your menu, AI does the rest</div></div>
+      <div class="stat" data-r><div class="n">$0</div><div class="l">upfront. Weekly payouts every Sunday, straight to your bank</div></div>
+    </div>
+    <a class="btn-yellow" href="https://tiffingo.vercel.app/join">Join TiffinGo &#8212; 10 minutes &#8594;</a>
+  </div>
+</section>
+
+<section class="final">
+  <h2 class="serif">Dinner's <em>already</em> planned.</h2>
+  <p>Launching in Surrey. Vancouver next. Your first week is waiting.</p>
+  <div class="ctas">
+    <a class="btn-yellow" href="https://tiffingo.vercel.app">Plan my week &#8594;</a>
+    <a class="btn-green" href="https://tiffingo.vercel.app/join">Join as a kitchen <b>&#8594;</b></a>
+  </div>
+</section>
+
+<footer>
+  <a class="logo foot" href="#"><img src="data:image/png;base64,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" alt="TiffinGo — Restaurant meals. Planned around you."></a>
+  <p>&#169; 2026 TiffinGo &#183; Surrey, BC &#183; tiffingo.app@gmail.com</p>
+</footer>`;
+
+export default function LandingPage() {
+  return (
+    <>
+      <div id="tg-landing" dangerouslySetInnerHTML={{ __html: MARKUP }} />
+      <TiffinScene />
+    </>
   );
 }
