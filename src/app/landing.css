@@ -6,7 +6,7 @@
   --cream:#F5F5F0; --warm:#EDEEE8; --gray:#5A6B5A; --gray-lt:#8A9A8A; --line:#D8DDD0;
 }
 #tg-landing *{margin:0;padding:0;box-sizing:border-box}
-#tg-landing{font-family:'DM Sans',system-ui,sans-serif;color:var(--green);background:var(--cream);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+#tg-landing{font-family:'DM Sans',system-ui,sans-serif;color:var(--green);background:var(--cream);-webkit-font-smoothing:antialiased;/* overflow-x:clip, never hidden: `hidden` makes this div a scroll container and that silently breaks position:sticky on the pinned hero */overflow-x:clip}
 #tg-landing .serif{font-family:'Fraunces',Georgia,serif}
 #tg-landing nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 4vw;display:flex;align-items:center;gap:30px;transition:.3s}
 #tg-landing nav.scrolled{background:rgba(245,245,240,.92);backdrop-filter:blur(14px);box-shadow:0 1px 0 var(--line)}
