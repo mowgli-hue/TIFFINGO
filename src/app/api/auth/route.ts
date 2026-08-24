@@ -2,11 +2,21 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, comparePassword, signToken, SESSION_COOKIE, sessionCookieOptions } from '@/lib/auth';
+import { hashPassword, comparePassword, signToken, authConfigured, SESSION_COOKIE, sessionCookieOptions } from '@/lib/auth';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(req: NextRequest) {
+  // Check this first. Signing used to fail *after* the user row was created,
+  // which left people with an account they could never log into.
+  if (!authConfigured()) {
+    console.error('[auth] JWT_SECRET is missing or too short — refusing to sign in or sign up.');
+    return NextResponse.json(
+      { error: 'Sign-in is temporarily unavailable. Please try again shortly.' },
+      { status: 503 }
+    );
+  }
+
   const url = new URL(req.url);
   const action = url.searchParams.get('action') ?? 'login';
   const body = await req.json();

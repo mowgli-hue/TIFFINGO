@@ -18,6 +18,14 @@ function getSecret(): string {
   return secret;
 }
 
+/* True when a usable secret is configured. Routes call this before doing any
+   work, so a misconfigured deploy fails cleanly instead of half-way through. */
+export function authConfigured(): boolean {
+  const secret = process.env.JWT_SECRET;
+  if (secret && secret.length >= 32) return true;
+  return process.env.NODE_ENV !== 'production';
+}
+
 export function signToken(payload: { userId: string; email: string }) {
   return jwt.sign(payload, getSecret(), { expiresIn: '30d' });
 }
