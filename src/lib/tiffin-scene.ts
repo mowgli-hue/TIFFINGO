@@ -396,7 +396,7 @@ export function initTiffinScene(THREE: any) {
    const p=reduced?0:P;
 
    const wide=cam.aspect>1.15;
-   const f=wide?0.20:0.0, gy=wide?0.0:0.30;   /* narrow: drop the tiffin below the copy */
+   const f=wide?0.20:0.0, gy=wide?0.0:0.24;   /* narrow: drop the tiffin below the copy */
    const fk=f+','+gy;
    if(fk!==lastF){ lastF=fk; cam.setViewOffset(w,h,-f*w,-gy*h,w,h); }
    bgMat.uniforms.uT.value=T; bgMat.uniforms.uP.value=p;
@@ -406,7 +406,7 @@ export function initTiffinScene(THREE: any) {
    const nar=clamp((1.05-cam.aspect)/1.05,0,.60);
    const spread=1-nar*.45;
    const az=lerp(.30,-.52,ease(p))+Math.sin(T*.20)*.03;
-   const dist=lerp(7.15,8.45,ease(seg(p,.10,.86)))*(1+nar*1.22);
+   const dist=lerp(7.15,8.45,ease(seg(p,.10,.86)))*(1+nar*1.04);
    const cy=lerp(.24,.62,ease(p));
    cam.position.set(Math.sin(az)*dist,cy+Math.sin(T*.42)*.05,Math.cos(az)*dist);
    cam.lookAt(0,lerp(0,.20,ease(p)),0);

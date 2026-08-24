@@ -15,7 +15,7 @@ const MARKUP = `<nav id="nav">
     <a href="/explore">Menus</a>
     <a href="#join">For kitchens</a>
   </div>
-  <a class="nav-cta" href="/join">Join as a kitchen <b>&#8594;</b></a>
+  <a class="nav-cta" href="/join"><span class="full">Join as a kitchen</span><span class="short">Join</span> <b>&#8594;</b></a>
 </nav>
 
 <div class="stage-wrap" id="stageWrap">
