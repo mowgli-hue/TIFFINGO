@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserRole {
+  CUSTOMER
+  MERCHANT
+  DRIVER
+  ADMIN
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -19,11 +26,13 @@ model User {
   postalCode    String?
   stripeId      String?
   goals         String[]
+  role          UserRole       @default(CUSTOMER)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   orders        Order[]
   subscriptions Subscription[]
   reviews       Review[]
+  kitchens      Kitchen[]
 }
 
 model Kitchen {
@@ -49,6 +58,8 @@ model Kitchen {
   cutoffTime      String         @default("8:00pm")
   deliverySlots   String[]
   commissionPct   Float          @default(10)
+  ownerId         String?
+  owner           User?          @relation(fields: [ownerId], references: [id])
   createdAt       DateTime       @default(now())
   menuItems       MenuItem[]
   orders          Order[]

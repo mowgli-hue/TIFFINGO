@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/auth';
+import { apiRole } from '@/lib/roles';
 
 /* Kitchen ids used to be derived from name + city and written with upsert,
    which meant anyone could POST {name:"The Chai Bar", city:"Surrey"} and
@@ -82,8 +83,15 @@ export async function POST(req: NextRequest) {
         deliverySlots: Array.isArray(kitchen?.deliverySlots) && kitchen.deliverySlots.length
           ? kitchen.deliverySlots.map(String).slice(0, 6)
           : ['12:00pm – 1:00pm'],
+        ownerId: user.userId,
         isOpen: false, // stays hidden until an admin approves it
       },
+    });
+
+    // Listing a kitchen makes you a merchant, so /dashboard opens up.
+    await prisma.user.updateMany({
+      where: { id: user.userId, role: 'CUSTOMER' },
+      data: { role: 'MERCHANT' },
     });
 
     const week = Array.isArray(meals) ? meals.slice(0, 14) : [];
@@ -107,4 +115,42 @@ export async function POST(req: NextRequest) {
     console.error('[merchant] create failed:', error);
     return NextResponse.json({ error: 'Failed to submit your kitchen. Try again.' }, { status: 500 });
   }
+}
+
+
+/* Approving a kitchen is what makes it visible to customers: /api/kitchens
+   only ever returns isOpen listings. Admins only. */
+export async function PATCH(req: NextRequest) {
+  const admin = await apiRole(['ADMIN']);
+  if (!admin) return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+
+  const { kitchenId, action } = await req.json().catch(() => ({}));
+  const open = action === 'approve' ? true : action === 'suspend' ? false : null;
+  if (!kitchenId || open === null) {
+    return NextResponse.json({ error: 'Send kitchenId and action: approve | suspend' }, { status: 400 });
+  }
+
+  try {
+    const kitchen = await prisma.kitchen.update({
+      where: { id: kitchenId },
+      data: { isOpen: open },
+      select: { id: true, name: true, isOpen: true },
+    });
+    return NextResponse.json({ kitchen });
+  } catch {
+    return NextResponse.json({ error: 'Kitchen not found' }, { status: 404 });
+  }
+}
+
+/* Kitchens waiting on approval, for the admin queue. */
+export async function GET() {
+  const admin = await apiRole(['ADMIN']);
+  if (!admin) return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+
+  const pending = await prisma.kitchen.findMany({
+    where: { isOpen: false },
+    include: { owner: { select: { name: true, email: true } }, weeklyMeals: true },
+    orderBy: { createdAt: 'desc' },
+  });
+  return NextResponse.json({ kitchens: pending });
 }
