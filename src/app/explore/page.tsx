@@ -4,7 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import KitchenCard from '@/components/KitchenCard';
-import { MOCK_KITCHENS, CATEGORIES } from '@/lib/mock-data';
+import { CATEGORIES } from '@/lib/mock-data';
+import { useKitchens } from '@/lib/kitchens';
 import clsx from 'clsx';
 
 const SORT_OPTIONS = ['Recommended', 'Highest rated', 'Fastest delivery', 'Price: low to high'];
@@ -20,8 +21,10 @@ function ExplorePage() {
   const [sort, setSort] = useState('Recommended');
   const [showSort, setShowSort] = useState(false);
 
+  const { kitchens, loading, failed } = useKitchens('Surrey');
+
   const results = useMemo(() => {
-    let list = [...MOCK_KITCHENS];
+    let list = [...kitchens];
     if (category === 'Tiffin plans') list = list.filter(k => k.type === 'tiffin');
     else if (category === 'Healthy')    list = list.filter(k => ['Healthy', 'Vegan'].includes(k.cuisine));
     else if (category === 'Indian')     list = list.filter(k => ['Indian', 'Punjabi', 'Pakistani'].includes(k.cuisine));
@@ -38,7 +41,7 @@ function ExplorePage() {
     else if (sort === 'Price: low to high') list.sort((a, b) => (a.pricePerMeal ?? 0) - (b.pricePerMeal ?? 0));
 
     return list;
-  }, [search, category, sort]);
+  }, [kitchens, search, category, sort]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] pb-24">
@@ -101,16 +104,47 @@ function ExplorePage() {
 
       {/* Results */}
       <div className="px-5">
-        <p className="text-[12px] text-[#8A9A8A] mb-3">
-          {results.length} kitchen{results.length !== 1 ? 's' : ''} · sorted by {sort.toLowerCase()}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {results.map(k => <KitchenCard key={k.id} kitchen={k} />)}
-        </div>
-        {results.length === 0 && (
+        {!loading && !failed && (
+          <p className="text-[12px] text-[#8A9A8A] mb-3">
+            {results.length} kitchen{results.length !== 1 ? 's' : ''} · sorted by {sort.toLowerCase()}
+          </p>
+        )}
+
+        {loading && (
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className="rounded-2xl bg-white border border-[#D8DDD0] h-[190px] animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {failed && !loading && (
           <div className="text-center py-16">
-            <p className="text-[14px] font-medium text-[#1A3A2A] mb-1">Nothing found</p>
-            <p className="text-[12px] text-[#8A9A8A]">Try a different category or search term</p>
+            <p className="text-[14px] font-medium text-[#1A3A2A] mb-1">We can&rsquo;t load kitchens right now</p>
+            <p className="text-[12px] text-[#8A9A8A] mb-4">Something went wrong on our side, not yours.</p>
+            <button onClick={() => location.reload()}
+              className="px-4 py-2 rounded-full text-[12.5px] font-semibold bg-[#043F28] text-white">
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!loading && !failed && (
+          <div className="grid grid-cols-2 gap-3">
+            {results.map(k => <KitchenCard key={k.id} kitchen={k} />)}
+          </div>
+        )}
+
+        {!loading && !failed && results.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-[14px] font-medium text-[#1A3A2A] mb-1">
+              {kitchens.length === 0 ? 'No kitchens here yet' : 'Nothing found'}
+            </p>
+            <p className="text-[12px] text-[#8A9A8A]">
+              {kitchens.length === 0
+                ? 'We\u2019re signing up kitchens in Surrey now \u2014 check back soon.'
+                : 'Try a different category or search term'}
+            </p>
           </div>
         )}
       </div>

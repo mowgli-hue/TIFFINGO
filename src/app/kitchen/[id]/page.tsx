@@ -4,7 +4,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Heart, Star, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import NavBar from '@/components/NavBar';
-import { MOCK_KITCHENS, WEEKLY_MEALS, isPastCutoff, hoursUntilCutoff } from '@/lib/mock-data';
+import { isPastCutoff, hoursUntilCutoff } from '@/lib/mock-data';
+import { useKitchen } from '@/lib/kitchens';
 import { useCart } from '@/store/cart';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
@@ -12,20 +13,42 @@ import clsx from 'clsx';
 export default function KitchenPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const kitchen = MOCK_KITCHENS.find(k => k.id === id);
-  const meals = WEEKLY_MEALS[id] ?? [];
+  const { kitchen, loading, failed } = useKitchen(id);
+  const meals = kitchen?.weeklyMeals ?? [];
   const { setMealOrder } = useCart();
   const [liked, setLiked] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(meals[0]?.day ?? 'Mon');
-  const [selectedSlot, setSelectedSlot] = useState(kitchen?.deliverySlots[0] ?? '12:00pm');
+  // The kitchen arrives async, so hold only an explicit choice and fall back
+  // to the first available option until the customer picks one.
+  const [dayChoice, setDayChoice] = useState<string | null>(null);
+  const [slotChoice, setSlotChoice] = useState<string | null>(null);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const selectedDay = dayChoice ?? meals[0]?.day ?? 'Mon';
+  const selectedSlot = slotChoice ?? kitchen?.deliverySlots?.[0] ?? '12:00pm';
+  const setSelectedDay = setDayChoice;
+  const setSelectedSlot = setSlotChoice;
   const pastCutoff = isPastCutoff();
   const hoursLeft = hoursUntilCutoff();
   const selectedMeal = meals.find(m => m.day === selectedDay) ?? meals[0];
 
-  if (!kitchen) return (
+  if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}>
-      <p className="text-[#8A9A8A]">Kitchen not found</p>
+      <p className="text-[#8A9A8A] text-[13px]">Loading kitchen…</p>
+    </div>
+  );
+
+  if (failed) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-8 text-center" style={{ background: '#F5F5F0' }}>
+      <p className="text-[15px] font-medium text-[#1A3A2A]">We can&rsquo;t load this kitchen right now</p>
+      <button onClick={() => location.reload()}
+        className="px-4 py-2 rounded-full text-[12.5px] font-semibold bg-[#043F28] text-white">Try again</button>
+    </div>
+  );
+
+  if (!kitchen) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-8 text-center" style={{ background: '#F5F5F0' }}>
+      <p className="text-[15px] font-medium text-[#1A3A2A]">Kitchen not found</p>
+      <p className="text-[12px] text-[#8A9A8A]">It may have stopped taking orders.</p>
+      <Link href="/explore" className="px-4 py-2 rounded-full text-[12.5px] font-semibold bg-[#043F28] text-white">Browse kitchens</Link>
     </div>
   );
 
