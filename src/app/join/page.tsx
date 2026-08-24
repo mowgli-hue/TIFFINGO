@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChefHat, ArrowRight, Check, Plus, X, Sparkles, RefreshCw } from 'lucide-react';
+import { ChefHat, ArrowRight, Check, Plus, X, Sparkles, RefreshCw, Link2, ClipboardPaste, Upload, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 
@@ -34,6 +34,13 @@ export default function JoinPage() {
     { name: '', price: '' },
   ]);
 
+  // Menu import — most restaurants already have their menu somewhere.
+  const [importMode, setImportMode] = useState<'link' | 'paste' | 'file'>('link');
+  const [importUrl, setImportUrl] = useState('');
+  const [importText, setImportText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importNote, setImportNote] = useState('');
+
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }));
 
@@ -41,6 +48,53 @@ export default function JoinPage() {
     setMenuItems(items => items.map((item, idx) => idx === i ? { ...item, [k]: e.target.value } : item));
 
   const validMenu = menuItems.filter(m => m.name.trim() && m.price.trim());
+
+  async function runImport(payload: Record<string, unknown>) {
+    setImporting(true);
+    setImportNote('');
+    try {
+      const res = await fetch('/api/import-menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.error && !data.items?.length) { toast.error(data.error); return; }
+
+      const found: MenuItem[] = (data.items || []).map((i: { name: string; price: string }) => ({
+        name: i.name, price: i.price || '',
+      }));
+      if (!found.length) { toast.error('No menu items found there'); return; }
+
+      // Keep anything they already typed, drop the empty placeholder rows.
+      const typed = menuItems.filter(m => m.name.trim());
+      const merged = [...typed, ...found].slice(0, 40);
+      while (merged.length < 3) merged.push({ name: '', price: '' });
+      setMenuItems(merged);
+
+      const missing = found.filter(i => !i.price).length;
+      setImportNote(
+        `Read ${found.length} item${found.length === 1 ? '' : 's'}${data.source ? ` from ${data.source}` : ''}.` +
+        (missing ? ` ${missing} had no price on the menu — add those below.` : ' Check the prices are right.')
+      );
+      toast.success(`Imported ${found.length} items`);
+    } catch {
+      toast.error('Import failed — try pasting your menu text');
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function importFromFile(file: File) {
+    if (file.size > 5 * 1024 * 1024) { toast.error('That file is over 5MB'); return; }
+    const data: string = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1] || '');
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    await runImport({ file: { data, mediaType: file.type } });
+  }
 
   async function generateMeals() {
     if (validMenu.length < 3) { toast.error('Add at least 3 menu items'); return; }
@@ -165,6 +219,74 @@ export default function JoinPage() {
         {/* STEP 1 — Menu */}
         {step === 1 && (
           <div className="space-y-4">
+            {/* Import — saves typing the whole menu by hand */}
+            <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
+              <p className="text-[13px] font-semibold mb-1" style={{ color: D }}>Already have a menu?</p>
+              <p className="text-[12px] leading-relaxed mb-3" style={{ color: '#8A9A8A' }}>
+                Link it, paste it, or upload it — we&rsquo;ll fill in the items for you. You can edit everything after.
+              </p>
+
+              <div className="flex gap-1.5 mb-3">
+                {([['link', 'Link', Link2], ['paste', 'Paste text', ClipboardPaste], ['file', 'PDF / photo', Upload]] as const).map(([mode, label, Icon]) => (
+                  <button key={mode} type="button" onClick={() => setImportMode(mode)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[11.5px] font-medium transition"
+                    style={{
+                      background: importMode === mode ? LT : 'transparent',
+                      border: `1px solid ${importMode === mode ? A : BR}`,
+                      color: importMode === mode ? '#C8941A' : '#5A6B5A',
+                    }}>
+                    <Icon size={13} /> {label}
+                  </button>
+                ))}
+              </div>
+
+              {importMode === 'link' && (
+                <div className="flex gap-2">
+                  <input value={importUrl} onChange={e => setImportUrl(e.target.value)}
+                    placeholder="yourrestaurant.com/menu"
+                    className="flex-1 border rounded-xl px-3.5 py-2.5 text-[13px] bg-white" style={inputStyle} />
+                  <button type="button" disabled={importing || !importUrl.trim()}
+                    onClick={() => runImport({ url: importUrl })}
+                    className="px-4 rounded-xl text-[12.5px] font-semibold flex items-center gap-1.5 disabled:opacity-40"
+                    style={{ background: D, color: '#fff' }}>
+                    {importing ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />} Read it
+                  </button>
+                </div>
+              )}
+
+              {importMode === 'paste' && (
+                <div className="space-y-2">
+                  <textarea value={importText} onChange={e => setImportText(e.target.value)} rows={5}
+                    placeholder={'Paste your menu here, e.g.\n\nMasala Chai  3.50\nAloo Paratha  8.00\nButter Chicken  14.99'}
+                    className="w-full border rounded-xl px-3.5 py-2.5 text-[13px] bg-white" style={inputStyle} />
+                  <button type="button" disabled={importing || importText.trim().length < 20}
+                    onClick={() => runImport({ text: importText })}
+                    className="w-full py-2.5 rounded-xl text-[12.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40"
+                    style={{ background: D, color: '#fff' }}>
+                    {importing ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />} Read my menu
+                  </button>
+                </div>
+              )}
+
+              {importMode === 'file' && (
+                <label className="w-full py-6 rounded-xl text-[12.5px] font-medium flex flex-col items-center justify-center gap-1.5 border-2 border-dashed cursor-pointer"
+                  style={{ borderColor: BR, color: '#5A6B5A' }}>
+                  <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) importFromFile(f); e.target.value = ''; }} />
+                  {importing ? <Loader2 size={17} className="animate-spin" /> : <Upload size={17} />}
+                  {importing ? 'Reading your menu…' : 'Choose a PDF or photo of your menu'}
+                  <span className="text-[10.5px]" style={{ color: '#8A9A8A' }}>Up to 5MB</span>
+                </label>
+              )}
+
+              {importNote && (
+                <div className="mt-3 rounded-xl p-2.5 flex items-start gap-2" style={{ background: LT, border: `0.5px solid ${A}` }}>
+                  <Check size={13} style={{ color: '#C8941A', flexShrink: 0, marginTop: 1 }} />
+                  <p className="text-[11px] leading-relaxed" style={{ color: '#C8941A' }}>{importNote}</p>
+                </div>
+              )}
+            </div>
+
             <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
               <p className="text-[13px] font-semibold mb-1" style={{ color: D }}>Add your menu items</p>
               <p className="text-[12px] leading-relaxed" style={{ color: '#8A9A8A' }}>Just the name and price. Our AI reads your menu and automatically creates your weekly meal combos in the next step. Add at least 3 items — the more you add, the better the combos.</p>
