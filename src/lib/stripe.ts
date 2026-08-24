@@ -1,8 +1,24 @@
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-04-10',
-  typescript: true,
+let _stripe: Stripe | null = null;
+
+/* Built on first use, not at import, so a missing key surfaces as a clear
+   message from the route that needed it rather than a crash on boot. */
+export function getStripe(): Stripe {
+  if (_stripe) return _stripe;
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('STRIPE_SECRET_KEY is not set — payments are unavailable.');
+  _stripe = new Stripe(key, { apiVersion: '2024-04-10', typescript: true });
+  return _stripe;
+}
+
+/* Back-compat for existing call sites: stripe.customers.create(...) still works. */
+export const stripe = new Proxy({} as Stripe, {
+  get(_t, prop) {
+    const client = getStripe() as any;
+    const value = client[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
 });
 
 export const PLANS = {

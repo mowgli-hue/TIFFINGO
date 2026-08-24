@@ -80,15 +80,24 @@ export async function PATCH(req: NextRequest) {
   const user = getAuthUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id, status } = await req.json();
+  const { id, action } = await req.json();
+
+  // The customer says what they want to do; the server decides what state
+  // that produces. Accepting a raw status let them set any value they liked.
+  const NEXT: Record<string, { status: string; cancelledAt?: Date }> = {
+    cancel: { status: 'CANCELLED', cancelledAt: new Date() },
+    pause:  { status: 'PAUSED' },
+    resume: { status: 'ACTIVE' },
+  };
+  const change = NEXT[action as string];
+  if (!id || !change) {
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+  }
 
   try {
     const subscription = await prisma.subscription.update({
       where: { id, userId: user.userId },
-      data: {
-        status,
-        ...(status === 'CANCELLED' && { cancelledAt: new Date() }),
-      },
+      data: change as any,
     });
     return NextResponse.json({ subscription });
   } catch {

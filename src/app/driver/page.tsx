@@ -15,8 +15,8 @@ export default function DriverApp() {
   const [online, setOnline] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [active, setActive] = useState<Order|null>(null);
-  const [earnings, setEarnings] = useState(68.40);
-  const [deliveries, setDeliveries] = useState(6);
+  const [earnings, setEarnings] = useState(0);
+  const [deliveries, setDeliveries] = useState(0);
 
   useEffect(()=>{
     if(online){const t=setTimeout(()=>setOrders(MOCK),1200);return()=>clearTimeout(t);}
@@ -31,6 +31,14 @@ export default function DriverApp() {
   }
 
   return (
+    <>
+    {/* This screen is not wired to live orders yet. A real driver must never
+        mistake sample jobs or a running total for their actual pay. */}
+    <div style={{ background: '#FFFBEB', borderBottom: '1px solid #F0B429', padding: '9px 16px' }}>
+      <p style={{ fontSize: 11.5, fontWeight: 600, color: '#B87F00', margin: 0, textAlign: 'center' }}>
+        Preview — sample jobs, not live orders. Earnings shown are not real.
+      </p>
+    </div>
     <div className="min-h-screen" style={{background:'#0E1A12'}}>
       <div style={{background:`linear-gradient(160deg,${D},${B})`}} className="px-5 pt-14 pb-5">
         <div className="flex items-center justify-between mb-5">
@@ -149,5 +157,6 @@ export default function DriverApp() {
         )}
       </div>
     </div>
+  </>
   );
 }

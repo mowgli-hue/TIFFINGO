@@ -17,20 +17,11 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ orders });
-  } catch {
-    // Return mock orders if DB not set up
-    return NextResponse.json({
-      orders: [
-        {
-          id: 'order-1',
-          status: 'ON_THE_WAY',
-          totalAmount: 9,
-          createdAt: new Date().toISOString(),
-          kitchen: { name: 'Ghar Ka Khana' },
-          items: [{ menuItem: { name: 'Dal makhani + rice' }, quantity: 1, price: 9 }],
-        },
-      ],
-    });
+  } catch (error) {
+    // Never invent an order. A customer seeing a delivery that does not exist
+    // will call you about it, and the outage stays invisible to us.
+    console.error('[orders] GET failed:', error);
+    return NextResponse.json({ error: 'Could not load your orders' }, { status: 500 });
   }
 }
 
