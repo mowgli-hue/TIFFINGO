@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getAuthUser } from '@/lib/auth';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -20,6 +21,11 @@ Respond ONLY with valid JSON, no markdown, no backticks, in this exact format:
 {"meals":[{"day":"Mon","emoji":"🫖","name":"Combo name","description":"...","protein":"18g","calories":520,"tags":["Vegetarian"]},...]}`;
 
 export async function POST(req: NextRequest) {
+  const user = getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
+  }
+
   const { menuItems, kitchenName, isHalal, isVeg } = await req.json();
 
   if (!menuItems || menuItems.length < 3) {

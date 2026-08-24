@@ -1,13 +1,14 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/store/cart';
 import { toast } from 'react-hot-toast';
 
-export default function SignupPage() {
+function SignupPageInner() {
   const router = useRouter();
+  const nextUrl = useSearchParams().get('next') || '/';
   const { setUser } = useAuth();
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function SignupPage() {
       if (!res.ok) throw new Error(data.error ?? 'Sign up failed');
       setUser(data.user);
       toast.success(`Welcome to TiffinGo, ${data.user.name.split(' ')[0]}!`);
-      router.push('/');
+      router.push(nextUrl);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Sign up failed');
     } finally {
@@ -85,5 +86,13 @@ export default function SignupPage() {
         <Link href="/auth/login" className="text-[#1D9E75] font-medium">Sign in</Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}><p className="text-[13px] text-[#8A9A8A]">Loading…</p></div>}>
+      <SignupPageInner />
+    </Suspense>
   );
 }

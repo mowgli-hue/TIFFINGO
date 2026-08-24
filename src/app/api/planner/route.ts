@@ -2,12 +2,18 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getAuthUser } from '@/lib/auth';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You are TiffinGo's AI meal planner. Help users customise their weekly tiffin meal plan. Keep responses short, friendly, max 2-3 sentences.`;
 
 export async function POST(req: NextRequest) {
+  const user = getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
+  }
+
   const { message, meals } = await req.json();
 
   if (!process.env.ANTHROPIC_API_KEY) {

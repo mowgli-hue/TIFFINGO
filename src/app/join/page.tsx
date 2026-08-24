@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChefHat, ArrowRight, Check, Plus, X, Sparkles, RefreshCw, Link2, ClipboardPaste, Upload, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/store/cart';
 
 const D = '#1A3A2A', A = '#F0B429', B = '#2D6A4A', LT = '#FFFBEB', BR = '#D8DDD0';
 const STEPS = ['Your kitchen', 'Your menu', 'AI meals', 'Go live'];
@@ -14,6 +15,7 @@ type Meal = { day: string; emoji: string; name: string; description: string; pro
 
 export default function JoinPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -58,6 +60,7 @@ export default function JoinPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) { toast.error('Sign in to continue'); router.push('/auth/login?next=/join'); return; }
       const data = await res.json();
       if (data.error && !data.items?.length) { toast.error(data.error); return; }
 
@@ -105,6 +108,7 @@ export default function JoinPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ menuItems: validMenu, kitchenName: form.name, isHalal: form.isHalal, isVeg: form.isVeg }),
       });
+      if (res.status === 401) { toast.error('Sign in to continue'); router.push('/auth/login?next=/join'); return; }
       const data = await res.json();
       if (data.meals) {
         setMeals(data.meals);
@@ -125,7 +129,12 @@ export default function JoinPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitchen: form, meals }),
       });
-      if (!res.ok) throw new Error();
+      if (res.status === 401) { toast.error('Sign in to submit'); router.push('/auth/login?next=/join'); return; }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        toast.error(d.error || 'Submission failed — try again');
+        return;
+      }
       toast.success('Application submitted! Pending approval.');
       router.push('/join/success');
     } catch {
@@ -138,6 +147,30 @@ export default function JoinPage() {
   const inputCls = 'w-full border rounded-2xl px-4 py-3 text-[14px] bg-white';
   const inputStyle = { borderColor: BR, color: D };
   const labelStyle = { color: '#5A6B5A' };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#F5F5F0' }}>
+        <div className="w-full max-w-sm rounded-2xl bg-white p-7 text-center" style={{ border: `0.5px solid ${BR}` }}>
+          <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: LT }}>
+            <ChefHat size={21} style={{ color: '#C8941A' }} />
+          </div>
+          <h1 className="text-[19px] font-semibold mb-2" style={{ color: D }}>List your kitchen on TiffinGo</h1>
+          <p className="text-[13px] leading-relaxed mb-6" style={{ color: '#8A9A8A' }}>
+            Create an account first so we can reach you about your listing and payouts. Takes a minute.
+          </p>
+          <Link href="/auth/signup?next=/join"
+            className="block w-full py-3 rounded-2xl text-[14px] font-semibold mb-2.5"
+            style={{ background: D, color: '#fff' }}>
+            Create an account
+          </Link>
+          <Link href="/auth/login?next=/join" className="block text-[13px] font-medium" style={{ color: '#5A6B5A' }}>
+            Already registered? Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: '#F5F5F0' }}>

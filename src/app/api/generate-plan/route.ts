@@ -1,12 +1,18 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const PLAN_DISCOUNT = 0.15;
 
 export async function POST(req: NextRequest) {
+  const user = getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
+  }
+
   const { kitchenId, diet, goal, days = 5 } = await req.json();
 
   const items = await prisma.menuItem.findMany({ where: { kitchenId } });

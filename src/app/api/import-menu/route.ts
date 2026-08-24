@@ -3,6 +3,7 @@ export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getAuthUser } from '@/lib/auth';
 import { lookup } from 'dns/promises';
 import net from 'net';
 
@@ -123,6 +124,11 @@ function parseItems(raw: string): { items: Extracted[]; reason?: string } {
 }
 
 export async function POST(req: NextRequest) {
+  const user = getAuthUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
+  }
+
   let body: { url?: string; text?: string; file?: { data: string; mediaType: string } };
   try {
     body = await req.json();

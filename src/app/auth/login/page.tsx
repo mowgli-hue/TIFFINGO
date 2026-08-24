@@ -1,13 +1,14 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/store/cart';
 import { toast } from 'react-hot-toast';
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
+  const nextUrl = useSearchParams().get('next') || '/';
   const { setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +28,7 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(data.error ?? 'Login failed');
       setUser(data.user);
       toast.success(`Welcome back, ${data.user.name.split(' ')[0]}!`);
-      router.push('/');
+      router.push(nextUrl);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -88,5 +89,13 @@ export default function LoginPage() {
         <Link href="/auth/signup" className="text-[#1D9E75] font-medium">Create one</Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}><p className="text-[13px] text-[#8A9A8A]">Loading…</p></div>}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
