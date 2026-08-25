@@ -43,11 +43,12 @@ Hard rules, in order of importance:
 6. Estimate calories and protein per combo from the actual contents. They must differ across the week; identical numbers on all five days is a failure.
 7. Pick an emoji that matches the food, not the drink.
 8. items[] must list the exact menu names used in that combo.
+9. Spread the week across the menu. If the menu has sections, the five anchors must come from at least three different sections — do not take all five from whichever section happens to be listed first.
 
 Respond ONLY with valid JSON, no markdown, no backticks:
 {"meals":[{"day":"Mon","emoji":"🍛","name":"...","description":"...","items":["exact name","exact name"],"protein":"22g","calories":610,"tags":["Vegetarian"]}]}`;
 
-function problems(meals: Meal[], foods: Set<string>): string[] {
+function problems(meals: Meal[], foods: Set<string>, sectionOf: Map<string, string>): string[] {
   const out: string[] = [];
   if (!Array.isArray(meals) || meals.length !== 5) {
     out.push(`expected 5 meals, got ${Array.isArray(meals) ? meals.length : 'none'}`);
@@ -67,6 +68,17 @@ function problems(meals: Meal[], foods: Set<string>): string[] {
 
   const cals = new Set(meals.map((m) => m.calories));
   if (cals.size === 1) out.push('every day has identical calories');
+
+  if (sectionOf.size > 0) {
+    const used = new Set<string>();
+    meals.forEach((m) => (m.items || []).forEach((n) => {
+      const sec = sectionOf.get(n.toLowerCase());
+      if (sec) used.add(sec);
+    }));
+    if (used.size < 3) {
+      out.push(`the whole week comes from ${used.size} section(s) — spread it across at least 3`);
+    }
+  }
   return out;
 }
 
@@ -74,7 +86,7 @@ export async function POST(req: NextRequest) {
   const user = getAuthUser();
   if (!user) return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
 
-  const { menuItems, kitchenName, isHalal, isVeg } = await req.json();
+  const { menuItems, kitchenName, isHalal, isVeg, steer } = await req.json();
   const items: Item[] = Array.isArray(menuItems) ? menuItems : [];
 
   if (items.length < 3) {
@@ -92,10 +104,23 @@ export async function POST(req: NextRequest) {
   }
 
   const foodNames = new Set(foodItems.map((i) => i.name.toLowerCase()));
+  const sectionOf = new Map<string, string>();
+  const foodSections = new Set<string>();
+  foodItems.forEach((i) => {
+    if (i.category) {
+      sectionOf.set(i.name.toLowerCase(), i.category);
+      foodSections.add(i.category);
+    }
+  });
+  const sections = foodSections.size >= 3 ? sectionOf : new Map<string, string>();
   const menuText = items
     .map((m) => `- ${m.name} ($${m.price})${m.category ? ` [${m.category}]` : ''}${isDrink(m) ? ' (DRINK)' : ' (FOOD)'}`)
     .join('\n');
   const dietary = [isHalal && 'Halal', isVeg && 'Vegetarian only'].filter(Boolean).join(', ');
+
+  const note = typeof steer === 'string' && steer.trim()
+    ? `\n\nThe restaurant asked for this specifically: "${steer.trim().slice(0, 300)}". Honour it while keeping every rule above.`
+    : '';
 
   const ask = (extra = '') =>
     askJson<{ meals: Meal[] }>({
@@ -104,18 +129,18 @@ export async function POST(req: NextRequest) {
       user:
         `Restaurant: ${kitchenName}${dietary ? ` (${dietary})` : ''}\n\n` +
         `Menu (${foodItems.length} food items, ${items.length - foodItems.length} drinks):\n${menuText}\n\n` +
-        `Build the 5-day tiffin calendar.${extra}`,
+        `Build the 5-day tiffin calendar.${note}${extra}`,
     });
 
   try {
     let parsed = await ask();
-    let bad = problems(parsed?.meals, foodNames);
+    let bad = problems(parsed?.meals, foodNames, sections);
 
     if (bad.length) {
       // One correction pass — tell it exactly what it got wrong.
       console.warn('[generate-meals] retrying, first attempt:', bad.join('; '));
       parsed = await ask(`\n\nYour previous attempt was rejected for: ${bad.join('; ')}. Fix these and return the corrected JSON.`);
-      bad = problems(parsed?.meals, foodNames);
+      bad = problems(parsed?.meals, foodNames, sections);
     }
 
     if (bad.length) {

@@ -42,6 +42,8 @@ export default function JoinPage() {
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
   const [importNote, setImportNote] = useState('');
+  const [importSections, setImportSections] = useState('');
+  const [steer, setSteer] = useState('');
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }));
@@ -71,11 +73,16 @@ export default function JoinPage() {
 
       // Keep anything they already typed, drop the empty placeholder rows.
       const typed = menuItems.filter(m => m.name.trim());
-      const merged = [...typed, ...found].slice(0, 40);
+      const merged = [...typed, ...found].slice(0, 150);
       while (merged.length < 3) merged.push({ name: '', price: '' });
       setMenuItems(merged);
 
+      const sections = data.bySection
+        ? Object.entries(data.bySection as Record<string, number>)
+            .map(([name, n]) => `${name} ${n}`).join(' · ')
+        : '';
       const missing = found.filter(i => !i.price).length;
+      setImportSections(sections);
       setImportNote(
         `Read ${found.length} item${found.length === 1 ? '' : 's'}${data.source ? ` from ${data.source}` : ''}.` +
         (missing ? ` ${missing} had no price on the menu — add those below.` : ' Check the prices are right.')
@@ -106,7 +113,7 @@ export default function JoinPage() {
       const res = await fetch('/api/generate-meals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ menuItems: validMenu, kitchenName: form.name, isHalal: form.isHalal, isVeg: form.isVeg }),
+        body: JSON.stringify({ menuItems: validMenu, kitchenName: form.name, isHalal: form.isHalal, isVeg: form.isVeg, steer: steer.trim() || undefined }),
       });
       if (res.status === 401) { toast.error('Sign in to continue'); router.push('/auth/login?next=/join'); return; }
       const data = await res.json();
@@ -317,7 +324,14 @@ export default function JoinPage() {
               {importNote && (
                 <div className="mt-3 rounded-xl p-2.5 flex items-start gap-2" style={{ background: LT, border: `0.5px solid ${A}` }}>
                   <Check size={13} style={{ color: '#C8941A', flexShrink: 0, marginTop: 1 }} />
-                  <p className="text-[11px] leading-relaxed" style={{ color: '#C8941A' }}>{importNote}</p>
+                  <div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: '#C8941A' }}>{importNote}</p>
+                    {importSections && (
+                      <p className="text-[10.5px] leading-relaxed mt-1" style={{ color: '#A8862A' }}>
+                        Sections found — {importSections}. Anything missing here was not on the page we read.
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -387,12 +401,27 @@ export default function JoinPage() {
               <>
                 <div className="flex items-center justify-between">
                   <p className="text-[14px] font-bold" style={{ color: D, fontFamily: 'Fraunces, serif' }}>Your AI-generated week</p>
-                  <button onClick={generateMeals} disabled={generating}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl"
-                    style={{ background: LT, color: '#C8941A' }}>
-                    <RefreshCw size={11} className={generating ? 'animate-spin' : ''} />
-                    Regenerate
-                  </button>
+                </div>
+                <div className="rounded-2xl p-3 bg-white" style={{ border: `0.5px solid ${BR}` }}>
+                  <div className="flex gap-2">
+                    <input
+                      value={steer}
+                      onChange={e => setSteer(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !generating) generateMeals(); }}
+                      placeholder="Change something — e.g. more parathas, less chai"
+                      className="flex-1 px-3 py-2 rounded-xl text-[12.5px] outline-none"
+                      style={{ background: '#F7F6F2', border: `0.5px solid ${BR}`, color: D }}
+                    />
+                    <button onClick={generateMeals} disabled={generating}
+                      className="flex items-center gap-1.5 text-[11.5px] font-semibold px-3.5 py-2 rounded-xl disabled:opacity-50"
+                      style={{ background: LT, color: '#C8941A' }}>
+                      <RefreshCw size={11} className={generating ? 'animate-spin' : ''} />
+                      Regenerate
+                    </button>
+                  </div>
+                  <p className="text-[10.5px] mt-1.5" style={{ color: '#8A9A8A' }}>
+                    Leave it blank for a different week from the same {validMenu.length} items.
+                  </p>
                 </div>
                 <div className="space-y-2.5">
                   {meals.map(meal => (

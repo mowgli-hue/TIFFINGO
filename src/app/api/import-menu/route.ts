@@ -90,7 +90,7 @@ Rules:
 2. Use the item name exactly as written on the menu. Do not invent or translate items.
 3. price: the number only, no currency symbol (e.g. "12.99"). If an item has several sizes, use the smallest. If no price is shown, use "".
 4. category: the menu section it sits under (e.g. "Mains", "Drinks", "Sides") or "" if there isn't one.
-5. Return at most 40 items, in menu order.
+5. Return EVERY orderable item on the page, from EVERY section, in menu order. Do not stop early, do not sample, do not summarise. A menu with 15 sections must come back with all 15 sections represented. Cap at 150 items only if there are genuinely more than that.
 6. If the content is not a menu at all, return {"items":[],"reason":"not a menu"}.
 
 Respond ONLY with valid JSON, no markdown fences:
@@ -113,7 +113,7 @@ function parseItems(raw: string): { items: Extracted[]; reason?: string } {
     reason: typeof parsed?.reason === 'string' ? parsed.reason : undefined,
     items: items
       .filter((i) => i && typeof i.name === 'string' && i.name.trim())
-      .slice(0, 40)
+      .slice(0, 150)
       .map((i) => ({
         name: String(i.name).trim().slice(0, 120),
         price: String(i.price ?? '').replace(/[^0-9.]/g, '').slice(0, 10),
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
   try {
     const response = await getAnthropic().messages.create({
       model: AI_MODEL,
-      max_tokens: 4000,
+      max_tokens: 8000,
       system: SYSTEM,
       messages: [{ role: 'user', content: content as any }],
     });
@@ -243,7 +243,12 @@ export async function POST(req: NextRequest) {
       }, { status: 200 });
     }
 
-    return NextResponse.json({ items, source, count: items.length });
+    const bySection: Record<string, number> = {};
+    for (const i of items) {
+      const key = i.category || 'Uncategorised';
+      bySection[key] = (bySection[key] ?? 0) + 1;
+    }
+    return NextResponse.json({ items, source, count: items.length, bySection });
   } catch (err: any) {
     const status = err?.status;
     console.error('[import-menu] model=' + AI_MODEL, status ?? '', err?.message ?? err);
