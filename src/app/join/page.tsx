@@ -321,8 +321,14 @@ export default function JoinPage() {
             </div>
 
             <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
-              <p className="text-[13px] font-semibold mb-1" style={{ color: D }}>Add your menu items</p>
-              <p className="text-[12px] leading-relaxed" style={{ color: '#8A9A8A' }}>Just the name and price. Our AI reads your menu and automatically creates your weekly meal combos in the next step. Add at least 3 items — the more you add, the better the combos.</p>
+              <p className="text-[13px] font-semibold mb-1" style={{ color: D }}>
+                {validMenu.length ? 'Your menu items' : 'Add your menu items'}
+              </p>
+              <p className="text-[12px] leading-relaxed" style={{ color: '#8A9A8A' }}>
+                {validMenu.length
+                  ? 'Check the prices, delete anything you don\u2019t offer as tiffin, and add whatever the menu missed. Our AI turns these into your weekly meal combos in the next step.'
+                  : 'Just the name and price \u2014 or use the reader above and we\u2019ll fill these in for you. Our AI turns them into your weekly meal combos in the next step. At least 3 items; the more you add, the better the combos.'}
+              </p>
             </div>
 
             <div className="space-y-2">
