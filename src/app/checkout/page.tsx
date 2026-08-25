@@ -1,17 +1,58 @@
 'use client';
+
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, MapPin, Check } from 'lucide-react';
-import { useCart } from '@/store/cart';
-import { DELIVERY_SLOTS } from '@/lib/mock-data';
+import { ArrowLeft, MapPin, Lock } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useKitchen } from '@/lib/kitchens';
-import { PLANS } from '@/lib/stripe';
-import PlanCard from '@/components/PlanCard';
+import { DELIVERY_SLOTS } from '@/lib/mock-data';
 import { toast } from 'react-hot-toast';
-import clsx from 'clsx';
 
-const STEPS = ['Plan', 'Delivery', 'Payment'] as const;
+const D = '#043F28', A = '#FEB001', LT = '#FFF8E8', BR = '#E6E3DA';
 
+const PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = PK ? loadStripe(PK) : null;
+
+/* Inner form — mounts only once we hold a clientSecret for the hold. */
+function PayForm({ orderId, amount }: { orderId: string; amount: number }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  async function pay() {
+    if (!stripe || !elements) return;
+    setBusy(true);
+    const { error } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+      confirmParams: { return_url: `${window.location.origin}/confirmation?orderId=${orderId}` },
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message || 'Your card was not accepted.');
+      return;
+    }
+    router.push(`/confirmation?orderId=${orderId}`);
+  }
+
+  return (
+    <div className="space-y-4">
+      <PaymentElement />
+      <button onClick={pay} disabled={busy || !stripe}
+        className="w-full py-4 rounded-2xl text-[14px] font-bold flex items-center justify-center gap-2 disabled:opacity-60"
+        style={{ background: D, color: A }}>
+        <Lock size={13} /> {busy ? 'Placing hold…' : `Place hold — $${amount.toFixed(2)}`}
+      </button>
+      <p className="text-[11px] leading-relaxed text-center" style={{ color: '#8A9A8A' }}>
+        This is a hold, not a charge. Your card is charged only when the kitchen
+        confirms your week at the 8pm cutoff — if they can&rsquo;t cook it, the hold
+        is released and you pay nothing.
+      </p>
+    </div>
+  );
+}
 
 function CheckoutPage() {
   const router = useRouter();
@@ -19,167 +60,131 @@ function CheckoutPage() {
   const kitchenId = searchParams.get('kitchenId') ?? '';
   const { kitchen } = useKitchen(kitchenId || undefined);
 
-  const { selectedPlan, setPlan, selectedDays, setDays } = useCart();
-  const [step, setStep] = useState<0 | 1 | 2>(1);
-  const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState('');
+  const [slot, setSlot] = useState(DELIVERY_SLOTS[0]);
+  const [starting, setStarting] = useState(false);
+  const [pay, setPay] = useState<{ clientSecret: string; orderId: string; amount: number } | null>(null);
 
-  const plan = selectedPlan ?? 'WEEKLY';
-  const planData = PLANS[plan];
-  const regularPrice = planData.mealsPerWeek * (kitchen?.pricePerMeal ?? 9);
-  const discount = regularPrice - planData.pricePerWeek;
-
-  async function handleConfirm() {
-    if (address.trim().length < 10) {
-      toast.error('Add your delivery address first');
-      return;
+  async function start() {
+    if (address.trim().length < 10) { toast.error('Add your delivery address first'); return; }
+    setStarting(true);
+    try {
+      const r = await fetch('/api/payments/intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kitchenId, type: 'weekly', address: address.trim(), deliverySlot: slot }),
+      });
+      if (r.status === 401) { router.push(`/auth/login?next=/checkout?kitchenId=${kitchenId}`); return; }
+      const d = await r.json();
+      if (!r.ok) { toast.error(d.error || 'Could not start the payment'); return; }
+      setPay({ clientSecret: d.clientSecret, orderId: d.orderId, amount: d.amount });
+    } catch {
+      toast.error('Could not reach payments — try again');
+    } finally {
+      setStarting(false);
     }
-    setLoading(true);
-    // Payments are not live yet (C2). This reserves the plan; it does not charge.
-    await new Promise(r => setTimeout(r, 600));
-    setLoading(false);
-    toast.success('Plan reserved — the kitchen will confirm payment with you.');
-    router.push(`/confirmation?kitchenId=${kitchenId}&plan=${plan}`);
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] pb-8">
-      {/* Header */}
-      <div className="bg-[#F5F5F0] px-5 pt-14 pb-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#D8DDD0] rounded-full flex items-center justify-center">
-          <ArrowLeft size={14} className="text-[#1A3A2A]" />
+    <div className="min-h-screen pb-10" style={{ background: '#F5F5F0' }}>
+      <div className="px-5 pt-14 pb-4 flex items-center gap-3">
+        <button onClick={() => router.back()} aria-label="Back"
+          className="w-8 h-8 bg-white rounded-full flex items-center justify-center" style={{ border: `0.5px solid ${BR}` }}>
+          <ArrowLeft size={14} color={D} />
         </button>
-        <h1 className="font-serif text-[19px] text-[#1A3A2A]">Checkout</h1>
+        <h1 className="text-[19px] font-bold" style={{ color: D, fontFamily: 'Fraunces, serif' }}>Checkout</h1>
       </div>
 
-      {/* Step indicator */}
-      <div className="flex items-center px-5 pb-4">
-        {STEPS.map((s, i) => (
-          <div key={s} className="flex items-center flex-1">
-            <div className="flex items-center gap-1.5">
-              <div className={clsx(
-                'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium',
-                i < step ? 'bg-[#8A9A8A]' : i === step ? 'bg-[#1A3A2A] text-white' : 'bg-[#F1EFE8] text-[#8A9A8A]'
-              )}>
-                {i < step
-                  ? <Check size={11} className="text-white" />
-                  : i + 1}
-              </div>
-              <span className={clsx('text-[10px] font-medium', i === step ? 'text-[#1A3A2A]' : i < step ? 'text-[#1A3A2A]' : 'text-[#B4B2A9]')}>
-                {s}
-              </span>
+      <div className="px-5 space-y-4 max-w-lg mx-auto">
+        {/* summary */}
+        <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
+          <div className="flex items-center gap-3 pb-3 mb-3" style={{ borderBottom: `0.5px solid ${BR}` }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: LT }}>🍛</div>
+            <div>
+              <p className="text-[13.5px] font-bold" style={{ color: D }}>{kitchen?.name ?? 'Kitchen'}</p>
+              <p className="text-[11.5px]" style={{ color: '#8A9A8A' }}>Weekly plan · 5 meals, Mon–Fri</p>
             </div>
-            {i < STEPS.length - 1 && <div className="flex-1 h-px bg-[#D8DDD0] mx-2" />}
           </div>
-        ))}
-      </div>
-
-      <div className="border-t border-[#D8DDD0]" />
-
-      <div className="px-5 py-4 space-y-4">
-        {/* Plan summary */}
-        <div>
-          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">YOUR PLAN</p>
-          <div className="card p-3.5">
-            <div className="flex items-center gap-3 pb-3 mb-3 border-b border-[#F1EFE8]">
-              <div className="w-10 h-10 rounded-xl bg-[#FFFBEB] flex items-center justify-center text-xl">🍛</div>
-              <div>
-                <p className="text-[13px] font-medium text-[#1A3A2A]">{kitchen?.name ?? 'Kitchen'}</p>
-                <p className="text-[11px] text-[#8A9A8A]">{plan.charAt(0) + plan.slice(1).toLowerCase()} plan · {planData.mealsPerWeek} meals</p>
-              </div>
-            </div>
-
-            {[
-              { label: 'Regular price', value: `$${regularPrice.toFixed(2)}/wk`, strike: true },
-              { label: 'Subscription discount', value: `-$${discount.toFixed(2)}`, green: true },
-              { label: 'Delivery', value: 'Free', green: true },
-            ].map(row => (
-              <div key={row.label} className="flex justify-between text-[12px] mb-1.5">
-                <span className="text-[#5F5E5A]">{row.label}</span>
-                <span className={clsx(row.strike && 'line-through text-[#B4B2A9]', row.green && 'text-[#1A3A2A] font-medium')}>
-                  {row.value}
-                </span>
-              </div>
-            ))}
-
-            <div className="flex justify-between pt-2.5 mt-1.5 border-t border-[#D8DDD0]">
-              <span className="text-[13px] font-medium text-[#1A3A2A]">Weekly total</span>
-              <span className="text-[16px] font-medium text-[#1A3A2A]">${planData.pricePerWeek.toFixed(2)}</span>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-[13px] font-medium" style={{ color: D }}>Weekly total</span>
+            <span className="text-[16px] font-bold" style={{ color: D }}>
+              ${(pay?.amount ?? kitchen?.weeklyPrice ?? 0).toFixed(2)}
+            </span>
           </div>
         </div>
 
-        {/* Delivery */}
-        <div>
-          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">DELIVERY ADDRESS</p>
-          <div className="card p-3.5">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] flex items-center justify-center flex-shrink-0">
-                <MapPin size={14} className="text-[#1A3A2A]" />
+        {/* delivery */}
+        {!pay && (
+          <div className="rounded-2xl p-4 bg-white space-y-3" style={{ border: `0.5px solid ${BR}` }}>
+            <p className="text-[11px] font-bold" style={{ color: '#5A6B5A' }}>DELIVERY</p>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: LT }}>
+                <MapPin size={14} color={D} />
               </div>
-              <input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Street address, unit, city — e.g. 10245 King George Blvd, Surrey"
-                className="flex-1 border border-[#D8DDD0] rounded-xl px-3 py-2.5 text-[12.5px] text-[#1A3A2A] outline-none"
-              />
+              <input value={address} onChange={(e) => setAddress(e.target.value)}
+                placeholder="Street address, unit, city"
+                className="flex-1 rounded-xl px-3 py-2.5 text-[12.5px] outline-none"
+                style={{ border: `0.5px solid ${BR}`, color: D }} />
             </div>
-
-            <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
-            <div className="flex gap-1.5">
-              {DELIVERY_SLOTS.map((slot) => (
-                <button
-                  key={slot}
-                  onClick={() => {
-                    const next = selectedDays.includes(slot)
-                      ? selectedDays.filter(d => d !== slot)
-                      : [...selectedDays, slot];
-                    if (next.length > 0) setDays(next);
-                  }}
-                  className={clsx(
-                    'flex-1 rounded-xl py-2 text-center transition-all',
-                    selectedDays.includes(slot)
-                      ? 'bg-[#FFFBEB] border border-[#1A3A2A]'
-                      : 'bg-[#F1EFE8] border border-transparent'
-                  )}
-                >
-                  <p className={clsx('text-[10px] font-medium', selectedDays.includes(slot) ? 'text-[#0F6E56]' : 'text-[#5F5E5A]')}>{slot}</p>
-                  <p className={clsx('text-[9px] mt-0.5', selectedDays.includes(slot) ? 'text-[#5DCAA5]' : 'text-[#8A9A8A]')}>{slot}</p>
+            <div className="flex gap-2">
+              {DELIVERY_SLOTS.map((s) => (
+                <button key={s} onClick={() => setSlot(s)}
+                  className="flex-1 rounded-xl py-2.5 text-[11.5px] font-medium"
+                  style={slot === s
+                    ? { background: LT, border: `0.5px solid ${D}`, color: D }
+                    : { background: '#F1EFE8', border: '0.5px solid transparent', color: '#5A6B5A' }}>
+                  {s}
                 </button>
               ))}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Payment */}
-        <div>
-          <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">PAYMENT</p>
-          <div className="card p-3.5">
-            <p className="text-[12.5px] font-medium text-[#1A3A2A] mb-1">Card payments are almost here</p>
-            <p className="text-[11.5px] text-[#8A9A8A] leading-relaxed">
-              While we finish setting up payments, confirming reserves your plan without charging you.
-              The kitchen will contact you to arrange payment for your first week.
+        {/* payment */}
+        <div className="rounded-2xl p-4 bg-white" style={{ border: `0.5px solid ${BR}` }}>
+          <p className="text-[11px] font-bold mb-3" style={{ color: '#5A6B5A' }}>PAYMENT</p>
+
+          {!PK && (
+            <p className="text-[12px] leading-relaxed" style={{ color: '#8A9A8A' }}>
+              Card payments are almost here. Until then, confirming reserves your
+              plan without charging you — the kitchen arranges payment for your
+              first week directly.
             </p>
-          </div>
+          )}
+
+          {PK && !pay && (
+            <button onClick={start} disabled={starting}
+              className="w-full py-4 rounded-2xl text-[14px] font-bold disabled:opacity-60"
+              style={{ background: D, color: A }}>
+              {starting ? 'Setting up…' : 'Continue to card'}
+            </button>
+          )}
+
+          {PK && pay && stripePromise && (
+            <Elements stripe={stripePromise} options={{ clientSecret: pay.clientSecret }}>
+              <PayForm orderId={pay.orderId} amount={pay.amount} />
+            </Elements>
+          )}
         </div>
-      </div>
 
-      {/* CTA */}
-      <div className="px-5 pb-8">
-        <button
-          onClick={handleConfirm}
-          disabled={loading}
-          className="w-full py-3.5 bg-[#1A3A2A] text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5 disabled:opacity-60"
-        >
-          <span>{loading ? 'Reserving…' : 'Reserve my plan'}</span>
-          <span className="text-[#FFD166] text-[12px]">${planData.pricePerWeek.toFixed(2)}/week</span>
-        </button>
+        {!PK && (
+          <button
+            onClick={() => {
+              if (address.trim().length < 10) { toast.error('Add your delivery address first'); return; }
+              toast.success('Plan reserved — the kitchen will confirm payment with you.');
+              router.push(`/confirmation?kitchenId=${kitchenId}`);
+            }}
+            className="w-full py-4 rounded-2xl text-[14px] font-bold"
+            style={{ background: A, color: D }}>
+            Reserve my plan
+          </button>
+        )}
 
-        <div className="flex justify-center gap-5 mt-3">
-          {['Cancel anytime', 'Pause anytime', 'No charge today'].map(t => (
+        <div className="flex justify-center gap-5 pt-1">
+          {['Hold now, charge at cutoff', 'Cancel anytime'].map((t) => (
             <div key={t} className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#1A3A2A]" />
-              <span className="text-[10px] text-[#8A9A8A]">{t}</span>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: D }} />
+              <span className="text-[10px]" style={{ color: '#8A9A8A' }}>{t}</span>
             </div>
           ))}
         </div>
@@ -190,7 +195,7 @@ function CheckoutPage() {
 
 export default function CheckoutPageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center"><p className="text-[#888780]">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}><p style={{ color: '#8A9A8A' }}>Loading…</p></div>}>
       <CheckoutPage />
     </Suspense>
   );

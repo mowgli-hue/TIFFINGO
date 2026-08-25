@@ -48,6 +48,8 @@ export async function GET() {
         rating: kitchen.rating,
         reviewCount: kitchen.reviewCount,
         commissionPct: kitchen.commissionPct,
+        payoutsEnabled: Boolean((kitchen as any).payoutsEnabled),
+        bankConnected: Boolean((kitchen as any).stripeAccountId),
         weeklyMeals: kitchen.weeklyMeals,
       },
       orders,

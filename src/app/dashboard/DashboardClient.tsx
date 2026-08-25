@@ -14,7 +14,7 @@ type Order = {
   items: { quantity: number; menuItem?: { name: string } | null }[];
 };
 type Data = {
-  kitchen: null | { id: string; name: string; isOpen: boolean; rating: number; reviewCount: number; commissionPct: number; weeklyMeals: Meal[] };
+  kitchen: null | { id: string; name: string; isOpen: boolean; rating: number; reviewCount: number; commissionPct: number; payoutsEnabled: boolean; bankConnected: boolean; weeklyMeals: Meal[] };
   orders: Order[];
   stats: null | { ordersToday: number; revenueToday: number; ordersAllTime: number; revenueAllTime: number; activeSubs: number };
 };
@@ -61,6 +61,22 @@ export default function DashboardClient() {
   }
 
   useEffect(() => { load(); }, []);
+
+  /* The cutoff decision. Capture turns the customer's hold into a charge;
+     release cancels it so they are never charged at all. */
+  async function settle(orderId: string, action: 'capture' | 'release') {
+    if (action === 'release' && !confirm('Release this hold? The customer will not be charged.')) return;
+    try {
+      const r = await fetch('/api/payments/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, action }),
+      });
+      const j = await r.json();
+      if (!r.ok) { alert(j.error || 'That did not go through'); return; }
+      load();
+    } catch { alert('Could not reach payments — try again'); }
+  }
 
   const k = data?.kitchen;
   const s = data?.stats;
@@ -112,6 +128,28 @@ export default function DashboardClient() {
               Set up my kitchen
             </Link>
           </div>
+        )}
+
+        {k && k.isOpen && !k.payoutsEnabled && (
+          <button
+            onClick={async () => {
+              try {
+                const r = await fetch('/api/merchant/stripe-onboard', { method: 'POST' });
+                const j = await r.json();
+                if (j.url) window.location.href = j.url;
+                else alert(j.error || 'Could not open Stripe onboarding');
+              } catch { alert('Could not reach Stripe — try again'); }
+            }}
+            className="w-full rounded-2xl p-4 text-left"
+            style={{ background: LT, border: `0.5px solid ${A}` }}>
+            <p className="text-[13px] font-bold mb-0.5" style={{ color: D }}>
+              💳 {k.bankConnected ? 'Finish connecting your bank' : 'Connect your bank to get paid'}
+            </p>
+            <p className="text-[11.5px] leading-relaxed" style={{ color: '#8A6A18' }}>
+              Your {100 - k.commissionPct}% lands in your account automatically every week.
+              Stripe handles the details — takes about 5 minutes. Tap to {k.bankConnected ? 'continue' : 'start'}.
+            </p>
+          </button>
         )}
 
         {k && !k.isOpen && (
@@ -167,6 +205,20 @@ export default function DashboardClient() {
                         </span>
                         <span className="text-[13px] font-bold" style={{ color: D }}>{money(o.totalAmount)}</span>
                       </div>
+                      {o.status === 'CONFIRMED' && (
+                        <div className="flex gap-2 mt-2.5 pt-2.5" style={{ borderTop: `0.5px solid ${BR}` }}>
+                          <button onClick={() => settle(o.id, 'capture')}
+                            className="flex-1 py-2 rounded-xl text-[11.5px] font-bold"
+                            style={{ background: D, color: A }}>
+                            Confirm — charge {money(o.totalAmount)}
+                          </button>
+                          <button onClick={() => settle(o.id, 'release')}
+                            className="flex-1 py-2 rounded-xl text-[11.5px] font-semibold bg-white"
+                            style={{ color: '#B4433F', border: '0.5px solid #F3D4D4' }}>
+                            Can&rsquo;t cook — release hold
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
