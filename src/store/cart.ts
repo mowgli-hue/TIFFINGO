@@ -37,6 +37,24 @@ export const useCart = create<CartStore>()(
   )
 );
 
+/* Lightweight per-device preferences. The calorie target drives the
+   "% of your day" lines on the planner and home — it is the user's own
+   yardstick, not medical advice. */
+interface PrefsStore {
+  calorieTarget: number;
+  setCalorieTarget: (n: number) => void;
+}
+
+export const usePrefs = create<PrefsStore>()(
+  persist(
+    (set) => ({
+      calorieTarget: 2000,
+      setCalorieTarget: (n) => set({ calorieTarget: n }),
+    }),
+    { name: 'tiffingo-prefs' }
+  )
+);
+
 interface AuthStore {
   user: User | null;
   setUser: (user: User | null) => void;

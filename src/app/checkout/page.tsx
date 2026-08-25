@@ -3,7 +3,8 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, MapPin, Check } from 'lucide-react';
 import { useCart } from '@/store/cart';
-import { MOCK_KITCHENS, DELIVERY_SLOTS } from '@/lib/mock-data';
+import { DELIVERY_SLOTS } from '@/lib/mock-data';
+import { useKitchen } from '@/lib/kitchens';
 import { PLANS } from '@/lib/stripe';
 import PlanCard from '@/components/PlanCard';
 import { toast } from 'react-hot-toast';
@@ -11,23 +12,17 @@ import clsx from 'clsx';
 
 const STEPS = ['Plan', 'Delivery', 'Payment'] as const;
 
-const PAYMENT_METHODS = [
-  { id: 'visa', label: 'Visa ending 4242', sub: 'Expires 09/27', icon: 'VISA' },
-  { id: 'apple', label: 'Apple Pay', sub: 'Touch ID to confirm', icon: '🍎' },
-  { id: 'new', label: 'Add new card', sub: 'Credit or debit', icon: '+' },
-];
 
 function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const kitchenId = searchParams.get('kitchenId') ?? '';
-  const kitchen = MOCK_KITCHENS.find(k => k.id === kitchenId);
+  const { kitchen } = useKitchen(kitchenId || undefined);
 
   const { selectedPlan, setPlan, selectedDays, setDays } = useCart();
   const [step, setStep] = useState<0 | 1 | 2>(1);
-  const [payMethod, setPayMethod] = useState('visa');
   const [loading, setLoading] = useState(false);
-  const [address] = useState('123 Main Street, Apt 4B, Vancouver BC');
+  const [address, setAddress] = useState('');
 
   const plan = selectedPlan ?? 'WEEKLY';
   const planData = PLANS[plan];
@@ -35,11 +30,15 @@ function CheckoutPage() {
   const discount = regularPrice - planData.pricePerWeek;
 
   async function handleConfirm() {
+    if (address.trim().length < 10) {
+      toast.error('Add your delivery address first');
+      return;
+    }
     setLoading(true);
-    // Simulate payment processing
-    await new Promise(r => setTimeout(r, 1500));
+    // Payments are not live yet (C2). This reserves the plan; it does not charge.
+    await new Promise(r => setTimeout(r, 600));
     setLoading(false);
-    toast.success('Subscription confirmed!');
+    toast.success('Plan reserved — the kitchen will confirm payment with you.');
     router.push(`/confirmation?kitchenId=${kitchenId}&plan=${plan}`);
   }
 
@@ -114,17 +113,16 @@ function CheckoutPage() {
         <div>
           <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">DELIVERY ADDRESS</p>
           <div className="card p-3.5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] flex items-center justify-center">
-                  <MapPin size={14} className="text-[#1A3A2A]" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-medium text-[#1A3A2A]">123 Main Street, Apt 4B</p>
-                  <p className="text-[11px] text-[#8A9A8A]">Vancouver, BC · V6B 1A1</p>
-                </div>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] flex items-center justify-center flex-shrink-0">
+                <MapPin size={14} className="text-[#1A3A2A]" />
               </div>
-              <button className="text-[11px] text-[#1A3A2A] font-medium">Change</button>
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Street address, unit, city — e.g. 10245 King George Blvd, Surrey"
+                className="flex-1 border border-[#D8DDD0] rounded-xl px-3 py-2.5 text-[12.5px] text-[#1A3A2A] outline-none"
+              />
             </div>
 
             <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2">DELIVERY SCHEDULE</p>
@@ -156,36 +154,12 @@ function CheckoutPage() {
         {/* Payment */}
         <div>
           <p className="text-[11px] font-medium text-[#8A9A8A] tracking-wider mb-2.5">PAYMENT</p>
-          <div className="card overflow-hidden">
-            {PAYMENT_METHODS.map((pm, i) => (
-              <button
-                key={pm.id}
-                onClick={() => setPayMethod(pm.id)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-3.5 py-3 text-left transition-all',
-                  i < PAYMENT_METHODS.length - 1 && 'border-b border-[#F1EFE8]',
-                  payMethod === pm.id && 'bg-[#FFF8F4]'
-                )}
-              >
-                <div className={clsx('w-5 h-5 rounded-full border-2 flex items-center justify-center', payMethod === pm.id ? 'border-[#1A3A2A]' : 'border-[#D3D1C7]')}>
-                  {payMethod === pm.id && <div className="w-2.5 h-2.5 rounded-full bg-[#1A3A2A]" />}
-                </div>
-                <div className="w-9 h-6 rounded bg-[#F1EFE8] flex items-center justify-center text-[10px] font-medium text-[#5F5E5A] border border-[#D8DDD0]">
-                  {pm.icon}
-                </div>
-                <div>
-                  <p className="text-[13px] text-[#1A3A2A]">{pm.label}</p>
-                  <p className="text-[11px] text-[#8A9A8A]">{pm.sub}</p>
-                </div>
-              </button>
-            ))}
-            {payMethod === 'new' && (
-              <div className="flex gap-2 px-3.5 py-3 border-t border-[#F1EFE8]">
-                <input placeholder="Card number" className="flex-[2] border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
-                <input placeholder="MM/YY" className="flex-1 border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
-                <input placeholder="CVV" className="w-14 border border-[#D8DDD0] rounded-xl px-3 py-2 text-[12px]" />
-              </div>
-            )}
+          <div className="card p-3.5">
+            <p className="text-[12.5px] font-medium text-[#1A3A2A] mb-1">Card payments are almost here</p>
+            <p className="text-[11.5px] text-[#8A9A8A] leading-relaxed">
+              While we finish setting up payments, confirming reserves your plan without charging you.
+              The kitchen will contact you to arrange payment for your first week.
+            </p>
           </div>
         </div>
       </div>
@@ -197,12 +171,12 @@ function CheckoutPage() {
           disabled={loading}
           className="w-full py-3.5 bg-[#1A3A2A] text-white rounded-2xl text-[14px] font-medium flex items-center justify-between px-5 disabled:opacity-60"
         >
-          <span>{loading ? 'Processing...' : 'Confirm subscription'}</span>
+          <span>{loading ? 'Reserving…' : 'Reserve my plan'}</span>
           <span className="text-[#FFD166] text-[12px]">${planData.pricePerWeek.toFixed(2)}/week</span>
         </button>
 
         <div className="flex justify-center gap-5 mt-3">
-          {['Cancel anytime', 'Pause anytime', 'Secure checkout'].map(t => (
+          {['Cancel anytime', 'Pause anytime', 'No charge today'].map(t => (
             <div key={t} className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-[#1A3A2A]" />
               <span className="text-[10px] text-[#8A9A8A]">{t}</span>

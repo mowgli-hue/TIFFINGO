@@ -7,7 +7,7 @@ import { Search, MapPin, ChevronRight, Sparkles, AlertCircle } from 'lucide-reac
 import NavBar from '@/components/NavBar';
 import KitchenCard from '@/components/KitchenCard';
 import { useKitchens, todaysMeal, LiveKitchen } from '@/lib/kitchens';
-import { useAuth } from '@/store/cart';
+import { useAuth, usePrefs } from '@/store/cart';
 
 const D = '#043F28';
 const A = '#FEB001';
@@ -19,6 +19,8 @@ const CHIPS = [
   { label: 'Tiffin plans', href: '/explore?filter=tiffin' },
   { label: 'Restaurants', href: '/explore?filter=restaurant' },
 ];
+
+type Sub = { id: string; kitchenId: string; status: string; pricePerWeek: number; kitchen?: { name: string } | null };
 
 type LiveOrder = {
   id: string;
@@ -52,6 +54,8 @@ export default function HomePage() {
   const [q, setQ] = useState('');
   const [orders, setOrders] = useState<LiveOrder[] | null>(null);
   const [ordersFailed, setOrdersFailed] = useState(false);
+  const [subs, setSubs] = useState<Sub[]>([]);
+  const { calorieTarget } = usePrefs();
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +67,10 @@ export default function HomePage() {
       })
       .then((d) => { if (!cancelled) setOrders(d.orders ?? []); })
       .catch(() => { if (!cancelled) setOrdersFailed(true); });
+    fetch('/api/subscriptions')
+      .then((r) => (r.ok ? r.json() : { subscriptions: [] }))
+      .then((d) => { if (!cancelled) setSubs(d.subscriptions ?? []); })
+      .catch(() => {});
     return () => { cancelled = true; };
   }, []);
 
@@ -82,6 +90,11 @@ export default function HomePage() {
   );
 
   const firstName = (user?.name ?? '').trim().split(' ')[0];
+
+  /* The plan card only exists when a real subscription does. */
+  const activeSub = subs.find((x) => x.status === 'ACTIVE') ?? null;
+  const planKitchen = activeSub ? kitchens.find((k) => k.id === activeSub.kitchenId) ?? null : null;
+  const planToday = planKitchen ? todaysMeal(planKitchen.weeklyMeals) : null;
 
   return (
     <div className="min-h-screen pb-24" style={{ background: '#F5F5F0' }}>
@@ -149,17 +162,41 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* plan builder */}
-        <Link href="/planner" className="block mb-6">
-          <div className="rounded-2xl p-4 flex items-center gap-3" style={{ background: LT, border: `0.5px solid ${A}` }}>
-            <Sparkles size={17} color="#C8941A" />
-            <div className="flex-1">
-              <p className="text-[13px] font-bold" style={{ color: D }}>Plan your week</p>
-              <p className="text-[11.5px]" style={{ color: '#8A6A18' }}>Five days of meals from $50 — you pick, we deliver daily.</p>
+        {/* your plan, or the door to one */}
+        {activeSub ? (
+          <Link href="/planner" className="block mb-6">
+            <div className="rounded-2xl p-4" style={{ background: LT, border: `0.5px solid ${A}` }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[11px] font-bold" style={{ color: '#C8941A' }}>YOUR PLAN · {activeSub.kitchen?.name ?? planKitchen?.name ?? ''}</p>
+                <ChevronRight size={14} color="#C8941A" />
+              </div>
+              {planToday ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px] bg-white">{planToday.emoji || '🍛'}</div>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-bold leading-tight" style={{ color: D }}>{planToday.name}</p>
+                    <p className="text-[11px] mt-0.5" style={{ color: '#8A6A18' }}>
+                      Coming today · {planToday.calories} cal (≈{Math.round(((planToday.calories ?? 0) / calorieTarget) * 100)}% of your day)
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[12px]" style={{ color: '#8A6A18' }}>No delivery today — your week resumes Monday.</p>
+              )}
             </div>
-            <ChevronRight size={16} color="#C8941A" />
-          </div>
-        </Link>
+          </Link>
+        ) : (
+          <Link href="/planner" className="block mb-6">
+            <div className="rounded-2xl p-4 flex items-center gap-3" style={{ background: LT, border: `0.5px solid ${A}` }}>
+              <Sparkles size={17} color="#C8941A" />
+              <div className="flex-1">
+                <p className="text-[13px] font-bold" style={{ color: D }}>Plan your week</p>
+                <p className="text-[11.5px]" style={{ color: '#8A6A18' }}>Five days of meals from $50 — you pick, we deliver daily.</p>
+              </div>
+              <ChevronRight size={16} color="#C8941A" />
+            </div>
+          </Link>
+        )}
 
         {/* today's meals — straight from each kitchen's real weekly calendar */}
         {today.length > 0 && (

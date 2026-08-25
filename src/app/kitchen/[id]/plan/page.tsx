@@ -79,7 +79,7 @@ export default function PlanBuilder() {
             <div className="flex justify-between text-[12px] mt-1" style={{color:'#C8941A'}}><span>Plan discount ({plan.discountPct}%)</span><span>−${(plan.subtotal-plan.total).toFixed(2)}</span></div>
             <div className="flex justify-between text-[16px] font-bold mt-2 pt-2" style={{color:D,borderTop:`0.5px solid ${A}`}}><span>Weekly total</span><span>${plan.total}</span></div>
           </div>
-          <button onClick={()=>{toast.success('Plan added! Checkout coming next.');}} className="w-full py-4 rounded-2xl text-[15px] font-bold" style={{background:A,color:D}}>
+          <button onClick={()=>router.push(`/checkout?kitchenId=${id}`)} className="w-full py-4 rounded-2xl text-[15px] font-bold" style={{background:A,color:D}}>
             Get this plan — ${plan.total}/week
           </button>
         </>}
