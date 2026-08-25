@@ -1,10 +1,9 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropic, AI_MODEL } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM = `You are TiffinGo's meal designer. Given a restaurant's menu items, create exactly 5 daily meal combos (Monday to Friday) for their weekly TiffinGo calendar.
 
@@ -39,8 +38,8 @@ export async function POST(req: NextRequest) {
   const dietary = [isHalal && 'Halal', isVeg && 'Vegetarian only'].filter(Boolean).join(', ');
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getAnthropic().messages.create({
+      model: AI_MODEL,
       max_tokens: 1500,
       system: SYSTEM,
       messages: [{

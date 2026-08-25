@@ -1,10 +1,9 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropic, AI_MODEL } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `You are TiffinGo's AI meal planner. Help users customise their weekly tiffin meal plan. Keep responses short, friendly, max 2-3 sentences.`;
 
@@ -36,8 +35,8 @@ export async function POST(req: NextRequest) {
       ? `Current week plan:\n${mealSummary}\n\nUser request: ${message}`
       : message;
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getAnthropic().messages.create({
+      model: AI_MODEL,
       max_tokens: 200,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],

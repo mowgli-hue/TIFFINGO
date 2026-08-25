@@ -1,10 +1,9 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropic, AI_MODEL } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const PLAN_DISCOUNT = 0.15;
 
 export async function POST(req: NextRequest) {
@@ -21,8 +20,8 @@ export async function POST(req: NextRequest) {
   const menuText = items.map(i => `- ${i.name} ($${i.price})`).join('\n');
 
   try {
-    const r = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const r = await getAnthropic().messages.create({
+      model: AI_MODEL,
       max_tokens: 1600,
       system: `Create a personalized ${days}-day meal plan (Mon-Fri) from ONLY the menu items given. Each day = 2-3 items combined into one meal. Respect diet preference. Vary items across days. Respond ONLY with JSON: {"days":[{"day":"Mon","emoji":"🍛","items":["exact item name","..."],"name":"combo title","description":"1 sentence","calories":550,"protein":"20g"}]}`,
       messages: [{ role: 'user', content: `Menu:\n${menuText}\n\nDiet: ${diet}. Goal: ${goal}. Days: ${days}.` }],

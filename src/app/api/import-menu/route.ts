@@ -2,12 +2,11 @@ export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getAnthropic, AI_MODEL, aiConfigured } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 import { lookup } from 'dns/promises';
 import net from 'net';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 12_000;
@@ -129,6 +128,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Sign in to use this.' }, { status: 401 });
   }
 
+  if (!aiConfigured()) {
+    return NextResponse.json(
+      { error: 'Menu import is temporarily unavailable. Paste your items in by hand for now.' },
+      { status: 503 }
+    );
+  }
+
   let body: { url?: string; text?: string; file?: { data: string; mediaType: string } };
   try {
     body = await req.json();
@@ -215,8 +221,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getAnthropic().messages.create({
+      model: AI_MODEL,
       max_tokens: 2000,
       system: SYSTEM,
       messages: [{ role: 'user', content: content as any }],
@@ -238,8 +244,19 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ items, source, count: items.length });
-  } catch (err) {
-    console.error('[import-menu]', err);
+  } catch (err: any) {
+    const status = err?.status;
+    console.error('[import-menu] model=' + AI_MODEL, status ?? '', err?.message ?? err);
+    if (status === 404) {
+      // the model id has been retired — set ANTHROPIC_MODEL in the environment
+      return NextResponse.json({ error: 'Menu reading is misconfigured on our side. We have been alerted.' }, { status: 500 });
+    }
+    if (status === 401 || status === 403) {
+      return NextResponse.json({ error: 'Menu reading is unavailable right now. Paste your items in by hand for now.' }, { status: 503 });
+    }
+    if (status === 429) {
+      return NextResponse.json({ error: 'Too many menu imports at once — wait a minute and try again.' }, { status: 429 });
+    }
     return NextResponse.json({ error: 'Reading the menu failed — try again in a moment.' }, { status: 500 });
   }
 }
