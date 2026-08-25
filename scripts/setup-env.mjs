@@ -1,44 +1,46 @@
-/* Rewrites DATABASE_URL / DIRECT_URL / JWT_SECRET in .env from one Supabase
-   pooler connection string. Never prints secrets — only a masked summary.
+/* Writes DATABASE_URL / DIRECT_URL / JWT_SECRET into .env.
+   Never prints secrets — only a masked summary.
 
-   Usage:
-     node scripts/setup-env.mjs 'postgresql://postgres.REF:PASSWORD@aws-1-REGION.pooler.supabase.com:5432/postgres'
-   (single quotes matter — passwords often contain $ ! & which zsh would eat) */
+   Two ways to call it:
+     node scripts/setup-env.mjs 'your-database-password'
+     node scripts/setup-env.mjs 'postgresql://postgres.REF:PASS@HOST:5432/postgres'
+
+   Single quotes matter — Supabase passwords often contain $ ! & and zsh
+   would otherwise eat them. */
 
 import fs from 'fs';
 import crypto from 'crypto';
 
-const input = process.argv[2];
-if (!input) {
-  console.error("Paste your Supabase connection string in single quotes:\n  node scripts/setup-env.mjs 'postgresql://postgres.REF:PASSWORD@aws-1-REGION.pooler.supabase.com:5432/postgres'");
+/* From the project's Connect dialog. Not secret — the password is. */
+const PROJECT_REF = 'pxtkdzplydetuyffldxm';
+const POOLER_HOST = 'aws-1-us-east-2.pooler.supabase.com';
+
+const arg = process.argv[2];
+if (!arg) {
+  console.error("Pass your Supabase database password in single quotes:\n  node scripts/setup-env.mjs 'your-database-password'");
   process.exit(1);
 }
 
-let u;
-try { u = new URL(input.trim()); } catch { console.error('That is not a valid URL.'); process.exit(1); }
-if (!/^postgres(ql)?:$/.test(u.protocol)) {
-  console.error(`Scheme is "${u.protocol}" — it must be postgresql://. You probably pasted the wrong field.`);
-  process.exit(1);
-}
-if (u.password === '' || /\[|\]|YOUR|PASSWORD/i.test(decodeURIComponent(u.password))) {
-  console.error('The password is still a placeholder. Copy the real one from the Supabase Connect dialog.');
-  process.exit(1);
-}
-if (!u.hostname.includes('pooler.supabase.com')) {
-  console.warn(`Warning: host is ${u.hostname} — expected something.pooler.supabase.com. Continuing anyway.`);
+let user, pass, host;
+
+if (/^postgres(ql)?:\/\//.test(arg.trim())) {
+  let u;
+  try { u = new URL(arg.trim()); } catch { console.error('That URL will not parse.'); process.exit(1); }
+  user = u.username; pass = decodeURIComponent(u.password); host = u.hostname;
+} else {
+  user = `postgres.${PROJECT_REF}`; pass = arg; host = POOLER_HOST;
 }
 
-const base = (port) => {
-  const c = new URL(u.toString());
-  c.port = String(port);
-  c.search = '';
-  return c.toString();
-};
+if (!pass || /^\[|\]$|YOUR-PASSWORD/i.test(pass)) {
+  console.error('That is still the [YOUR-PASSWORD] placeholder.\nSupabase never shows the real one — reset it under Project Settings → Database → Reset database password, then run this again with the new value.');
+  process.exit(1);
+}
 
+const enc = encodeURIComponent(pass);
 // Serverless (Vercel): app traffic goes through the transaction pooler on 6543;
 // prisma db push / migrate must use the session pooler on 5432.
-const DATABASE_URL = base(6543) + '?pgbouncer=true&connection_limit=1';
-const DIRECT_URL = base(5432);
+const DATABASE_URL = `postgresql://${user}:${enc}@${host}:6543/postgres?pgbouncer=true&connection_limit=1`;
+const DIRECT_URL = `postgresql://${user}:${enc}@${host}:5432/postgres`;
 
 const path = '.env';
 const lines = fs.readFileSync(path, 'utf8').split('\n');
