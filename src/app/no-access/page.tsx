@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
+import SwitchAccount from './SwitchAccount';
 
 const D = '#043F28';
 const A = '#FEB001';
@@ -49,10 +50,7 @@ function Body({ need }: { need?: string }) {
             style={{ background: '#fff', color: D, border: `0.5px solid ${BR}` }}>
             Apply as a kitchen
           </Link>
-          <Link href="/auth/login"
-            className="block w-full py-2.5 text-[13px] font-medium" style={{ color: '#5A6B5A' }}>
-            Sign in with a different account
-          </Link>
+          <SwitchAccount />
         </div>
 
         <p className="text-[11.5px] mt-6" style={{ color: '#8A9A8A' }}>
