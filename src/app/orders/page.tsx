@@ -1,217 +1,174 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Phone, MessageSquare } from 'lucide-react';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { MapPin, Phone, AlertCircle } from 'lucide-react';
 import NavBar from '@/components/NavBar';
-import clsx from 'clsx';
 
-const STATUSES = [
-  { key: 'CONFIRMED',  label: 'Order confirmed' },
-  { key: 'PREPARING',  label: 'Kitchen prepared' },
-  { key: 'ON_THE_WAY', label: 'On the way'       },
-  { key: 'DELIVERED',  label: 'Delivered'         },
-] as const;
+const D = '#043F28';
+const A = '#FEB001';
+const LT = '#FFF8E8';
+const BR = '#E6E3DA';
 
-type Status = typeof STATUSES[number]['key'];
+type Item = { id: string; quantity: number; price: number; menuItem?: { name: string } | null };
+type Order = {
+  id: string;
+  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'ON_THE_WAY' | 'DELIVERED' | 'CANCELLED';
+  totalAmount: number;
+  deliveryFee: number;
+  address: string;
+  deliverySlot?: string | null;
+  mealName?: string | null;
+  mealDay?: string | null;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  createdAt: string;
+  kitchen?: { name: string } | null;
+  items: Item[];
+};
 
-// Simulated driver path (lat/lng offsets for the schematic map)
-const DRIVER_PATH = [
-  { x: 150, y: 110 },
-  { x: 120, y: 110 },
-  { x: 90,  y: 110 },
-  { x: 80,  y: 140 },
-  { x: 80,  y: 170 },
-];
+const STEPS = ['PENDING', 'CONFIRMED', 'PREPARING', 'ON_THE_WAY', 'DELIVERED'] as const;
+
+const LABEL: Record<Order['status'], string> = {
+  PENDING: 'Order placed',
+  CONFIRMED: 'Confirmed by the kitchen',
+  PREPARING: 'Being cooked',
+  ON_THE_WAY: 'On the way',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
+};
+
+function when(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
 
 export default function OrdersPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<Status>('ON_THE_WAY');
-  const [driverPos, setDriverPos] = useState(DRIVER_PATH[0]);
-  const [eta, setEta] = useState(12);
-  const [pathIdx, setPathIdx] = useState(0);
+  const [orders, setOrders] = useState<Order[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPathIdx(prev => {
-        if (prev >= DRIVER_PATH.length - 1) {
-          clearInterval(interval);
-          setStatus('DELIVERED');
-          setEta(0);
-          return prev;
-        }
-        const next = prev + 1;
-        setDriverPos(DRIVER_PATH[next]);
-        setEta(p => Math.max(0, p - 2));
-        if (next === DRIVER_PATH.length - 1) setStatus('DELIVERED');
-        return next;
-      });
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  const currentStep = STATUSES.findIndex(s => s.key === status);
-  const progress = ((currentStep + 1) / STATUSES.length) * 100;
+    let cancelled = false;
+    fetch('/api/orders')
+      .then(async (r) => {
+        if (r.status === 401) { router.push('/auth/login?next=/orders'); return null; }
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || 'Could not load your orders');
+        return d;
+      })
+      .then((d) => { if (d && !cancelled) setOrders(d.orders ?? []); })
+      .catch((e) => { if (!cancelled) setError(e.message); });
+    return () => { cancelled = true; };
+  }, [router]);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-24">
-      {/* Status bar */}
-      <div className="bg-[#FAFAF8] px-5 pt-14 pb-2 flex items-center gap-3">
-        <button onClick={() => router.back()} className="w-8 h-8 bg-white border border-[#E8E5DE] rounded-full flex items-center justify-center">
-          <ArrowLeft size={14} className="text-[#2C2C2A]" />
-        </button>
-        <h1 className="font-serif text-[19px] text-[#2C2C2A]">Order tracking</h1>
+    <div className="min-h-screen pb-24" style={{ background: '#F5F5F0' }}>
+      <div style={{ background: `linear-gradient(160deg, ${D}, #0A5533)` }} className="px-5 pt-12 pb-6">
+        <h1 className="text-[22px] font-bold text-white" style={{ fontFamily: 'Fraunces, serif' }}>Your orders</h1>
       </div>
 
-      {/* Schematic map */}
-      <div className="mx-5 bg-[#EEEEE9] rounded-3xl overflow-hidden relative" style={{ height: 220 }}>
-        <svg width="100%" height="100%" viewBox="0 0 300 220" fill="none">
-          {/* Grid roads */}
-          <rect x="0" y="46" width="300" height="8" fill="#fff" opacity="0.7" />
-          <rect x="0" y="106" width="300" height="8" fill="#fff" opacity="0.7" />
-          <rect x="0" y="166" width="300" height="8" fill="#fff" opacity="0.7" />
-          <rect x="56" y="0" width="8" height="220" fill="#fff" opacity="0.7" />
-          <rect x="146" y="0" width="8" height="220" fill="#fff" opacity="0.7" />
-          <rect x="236" y="0" width="8" height="220" fill="#fff" opacity="0.7" />
+      <div className="px-5 pt-5 space-y-3">
+        {!orders && !error && [0, 1].map((i) => (
+          <div key={i} className="rounded-2xl bg-white animate-pulse" style={{ height: 130, border: `0.5px solid ${BR}` }} />
+        ))}
 
-          {/* City blocks */}
-          {[[64,54,74,44],[154,54,74,44],[6,54,42,44],[64,114,74,44],[154,114,74,44],[244,114,54,44]].map(([x,y,w,h],i) => (
-            <rect key={i} x={x} y={y} width={w} height={h} rx="3" fill="#E0E0DA" />
-          ))}
-
-          {/* Route */}
-          <path d={`M80 170 L80 108 L150 108 L150 46 L220 46`} stroke="#1D9E75" strokeWidth="2.5" strokeDasharray="6 4" strokeLinecap="round" opacity="0.7" />
-
-          {/* Kitchen pin */}
-          <g transform="translate(206,34)">
-            <path d="M14 0C7.37 0 2 5.37 2 12c0 8.75 12 20 12 20S26 20.75 26 12C26 5.37 20.63 0 14 0z" fill="#2C2C2A" />
-            <text x="14" y="14" textAnchor="middle" dominantBaseline="central" fontSize="9" fill="#fff">🍛</text>
-          </g>
-
-          {/* Home pin with pulse */}
-          <circle cx="80" cy="170" r="12" fill="#1D9E75" opacity="0.2">
-            <animate attributeName="r" from="10" to="18" dur="1.8s" repeatCount="indefinite" />
-            <animate attributeName="opacity" from="0.3" to="0" dur="1.8s" repeatCount="indefinite" />
-          </circle>
-          <g transform="translate(66,158)">
-            <path d="M14 0C7.37 0 2 5.37 2 12c0 8.75 12 20 12 20S26 20.75 26 12C26 5.37 20.63 0 14 0z" fill="#1D9E75" />
-            <path d="M14 6l7 5.5v8h-4v-5h-6v5H7v-8z" fill="#fff" />
-          </g>
-
-          {/* Driver pin */}
-          <g transform={`translate(${driverPos.x - 14},${driverPos.y - 14})`} style={{ transition: 'transform 2s ease-in-out' }}>
-            <circle cx="14" cy="14" r="13" fill="#fff" stroke="#1D9E75" strokeWidth="1.5" />
-            <text x="14" y="15" textAnchor="middle" dominantBaseline="central" fontSize="12">🛵</text>
-          </g>
-        </svg>
-
-        {/* ETA pill */}
-        <div className="absolute top-3 right-3 bg-[#2C2C2A] text-white rounded-full px-3 py-1.5 flex items-center gap-1.5">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.5" stroke="#9FE1CB" strokeWidth="1"/><path d="M5.5 3v2.5l1.5 1.5" stroke="#9FE1CB" strokeWidth="1" strokeLinecap="round"/></svg>
-          <span className="text-[11px] font-medium">
-            {status === 'DELIVERED' ? 'Delivered!' : `Arriving in ${eta} min`}
-          </span>
-        </div>
-      </div>
-
-      {/* Status card */}
-      <div className="mx-5 mt-4">
-        <div className="card p-4">
-          {/* Status header */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#E1F5EE] flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.5" stroke="#1D9E75" strokeWidth="1.3"/><path d="M6 9l2.5 2.5L12 6.5" stroke="#1D9E75" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </div>
+        {error && (
+          <div className="rounded-2xl p-4 flex items-start gap-2.5" style={{ background: '#FFF4F4', border: '0.5px solid #F3D4D4' }}>
+            <AlertCircle size={15} color="#B4433F" className="mt-0.5" />
             <div>
-              <p className="text-[16px] font-medium text-[#2C2C2A]">
-                {status === 'DELIVERED' ? 'Delivered!' : status === 'ON_THE_WAY' ? 'On the way' : status === 'PREPARING' ? 'Preparing' : 'Confirmed'}
-              </p>
-              <p className="text-[11px] text-[#888780]">
-                {status === 'DELIVERED' ? 'Enjoy your meal!' : 'Arjun is heading to you · 1.2 km away'}
+              <p className="text-[13px] font-semibold mb-0.5" style={{ color: '#B4433F' }}>{error}</p>
+              <p className="text-[11.5px]" style={{ color: '#A06561' }}>
+                This is a problem on our side. Your orders are safe — try again in a moment.
               </p>
             </div>
           </div>
+        )}
 
-          {/* Progress bar */}
-          <div className="h-1.5 bg-[#F1EFE8] rounded-full mb-4 overflow-hidden">
-            <div className="h-full bg-[#1D9E75] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+        {orders?.length === 0 && (
+          <div className="rounded-2xl p-6 text-center" style={{ background: '#fff', border: `0.5px solid ${BR}` }}>
+            <p className="text-[28px] mb-2">🍱</p>
+            <p className="text-[14px] font-bold mb-1" style={{ color: D }}>No orders yet</p>
+            <p className="text-[12.5px] leading-relaxed mb-5" style={{ color: '#8A9A8A' }}>
+              When you order a meal or start a weekly plan, you will be able to follow it here.
+            </p>
+            <Link href="/explore" className="inline-block px-6 py-3 rounded-2xl text-[13px] font-bold"
+              style={{ background: D, color: A }}>
+              Browse this week&rsquo;s menus
+            </Link>
           </div>
+        )}
 
-          {/* Steps */}
-          <div className="flex justify-between">
-            {STATUSES.map((s, i) => {
-              const done = i < currentStep;
-              const active = i === currentStep;
-              return (
-                <div key={s.key} className="flex flex-col items-center gap-1.5 flex-1">
-                  <div className={clsx(
-                    'w-6 h-6 rounded-full flex items-center justify-center',
-                    done ? 'bg-[#888780]' : active ? 'bg-[#2C2C2A]' : 'bg-[#F1EFE8]'
-                  )}>
-                    {done
-                      ? <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      : active
-                        ? <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                        : null
-                    }
-                  </div>
-                  <p className={clsx('text-[9px] font-medium text-center leading-tight', active ? 'text-[#2C2C2A]' : done ? 'text-[#1D9E75]' : 'text-[#B4B2A9]')}>
-                    {s.label}
+        {orders?.map((o) => {
+          const stepIndex = STEPS.indexOf(o.status as typeof STEPS[number]);
+          const live = stepIndex >= 0 && o.status !== 'DELIVERED';
+          return (
+            <div key={o.id} className="rounded-2xl bg-white p-4" style={{ border: `0.5px solid ${BR}` }}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="min-w-0">
+                  <p className="text-[14px] font-bold truncate" style={{ color: D }}>
+                    {o.kitchen?.name ?? 'Kitchen'}
                   </p>
+                  <p className="text-[11.5px]" style={{ color: '#8A9A8A' }}>{when(o.createdAt)}</p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+                <span className="text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+                  style={{
+                    background: o.status === 'CANCELLED' ? '#FBEAEA' : LT,
+                    color: o.status === 'CANCELLED' ? '#B4433F' : '#C8941A',
+                  }}>
+                  {LABEL[o.status]}
+                </span>
+              </div>
 
-      {/* Driver card */}
-      <div className="mx-5 mt-3">
-        <div className="card p-3.5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-[#FAEEDA] flex items-center justify-center text-xl flex-shrink-0 border-2 border-white shadow-sm">
-            🧑
-          </div>
-          <div className="flex-1">
-            <p className="text-[13px] font-medium text-[#2C2C2A]">Arjun S.</p>
-            <p className="text-[11px] text-[#888780]">Honda Activa · MH 04 BX 2219</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <svg key={i} width="9" height="9" viewBox="0 0 9 9" fill="#EF9F27"><path d="M4.5 0l1.1 3.1h3.3L6.3 5l1.1 3.1L4.5 6.4 1.6 8.1 2.7 5 .1 3.1h3.3z"/></svg>
-              ))}
-              <span className="text-[10px] text-[#888780] ml-0.5">4.97 · 1,204 deliveries</span>
+              <p className="text-[12.5px] mb-3" style={{ color: '#5A6B5A' }}>
+                {o.mealName ||
+                  o.items.map((i) => `${i.quantity}× ${i.menuItem?.name ?? 'Item'}`).join(', ') ||
+                  'Weekly plan'}
+              </p>
+
+              {/* progress — only for orders actually in flight */}
+              {live && (
+                <div className="flex gap-1 mb-3">
+                  {STEPS.slice(0, 4).map((s, i) => (
+                    <div key={s} className="flex-1 h-1 rounded-full"
+                      style={{ background: i <= stepIndex ? A : '#EDEBE4' }} />
+                  ))}
+                </div>
+              )}
+
+              {/* a driver is shown only when one is actually assigned */}
+              {o.driverName && (
+                <div className="flex items-center gap-2.5 rounded-xl p-2.5 mb-3" style={{ background: '#F7F6F2' }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold"
+                    style={{ background: D, color: A }}>
+                    {o.driverName.slice(0, 1).toUpperCase()}
+                  </div>
+                  <p className="flex-1 text-[12.5px] font-medium" style={{ color: D }}>{o.driverName}</p>
+                  {o.driverPhone && (
+                    <a href={`tel:${o.driverPhone}`} className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ background: LT }} aria-label="Call the driver">
+                      <Phone size={13} color="#C8941A" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2.5" style={{ borderTop: `0.5px solid ${BR}` }}>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin size={12} color="#8A9A8A" />
+                  <span className="text-[11.5px] truncate" style={{ color: '#8A9A8A' }}>
+                    {o.address}{o.deliverySlot ? ` · ${o.deliverySlot}` : ''}
+                  </span>
+                </div>
+                <span className="text-[13px] font-bold whitespace-nowrap" style={{ color: D }}>
+                  ${o.totalAmount.toFixed(2)}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="w-9 h-9 rounded-full bg-[#F1EFE8] flex items-center justify-center border border-[#E8E5DE]">
-              <Phone size={14} className="text-[#5F5E5A]" />
-            </button>
-            <button className="w-9 h-9 rounded-full bg-[#F1EFE8] flex items-center justify-center border border-[#E8E5DE]">
-              <MessageSquare size={14} className="text-[#5F5E5A]" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Order summary */}
-      <div className="mx-5 mt-3">
-        <div className="card p-3.5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-[#E1F5EE] flex items-center justify-center text-xl flex-shrink-0">🍛</div>
-          <div className="flex-1">
-            <p className="text-[13px] font-medium text-[#2C2C2A]">Ghar Ka Khana</p>
-            <p className="text-[11px] text-[#888780]">Dal makhani + rice · weekly plan</p>
-          </div>
-          <span className="text-[11px] font-medium text-[#5F5E5A] bg-[#F1EFE8] px-2 py-1 rounded-lg">1 item</span>
-        </div>
-      </div>
-
-      {/* Buttons */}
-      <div className="mx-5 mt-4 flex gap-2">
-        <button className="flex-1 py-3 bg-white border border-[#E8E5DE] rounded-2xl text-[12px] font-medium text-[#5F5E5A]">
-          Cancel
-        </button>
-        <button className="flex-[2] py-3 bg-[#2C2C2A] text-white rounded-2xl text-[13px] font-medium flex items-center justify-center gap-1.5">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#9FE1CB" strokeWidth="1.1"/><path d="M6.5 4v2.5l1.5 1.5" stroke="#9FE1CB" strokeWidth="1.1" strokeLinecap="round"/></svg>
-          Live support
-        </button>
+          );
+        })}
       </div>
 
       <NavBar />

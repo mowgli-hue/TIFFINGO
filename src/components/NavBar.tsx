@@ -6,7 +6,7 @@ import { useCart } from '@/store/cart';
 import clsx from 'clsx';
 
 const NAV = [
-  { href: '/',        icon: Home,        label: 'Home'    },
+  { href: '/home',    icon: Home,        label: 'Home'    },
   { href: '/explore', icon: Search,      label: 'Explore' },
   { href: '/orders',  icon: ShoppingBag, label: 'Orders'  },
   { href: '/profile', icon: User,        label: 'Profile' },
