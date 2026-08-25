@@ -142,6 +142,8 @@ export default function JoinPage() {
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         toast.error(d.error || 'Submission failed — try again');
+        // The server tells us where this applicant actually belongs.
+        if (d.goTo) setTimeout(() => router.push(d.goTo), 1200);
         return;
       }
       toast.success('Application submitted! Pending approval.');

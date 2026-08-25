@@ -53,11 +53,21 @@ export async function POST(req: NextRequest) {
        name is a support conversation, not a silent overwrite. */
     const clash = await prisma.kitchen.findFirst({
       where: { name: { equals: name, mode: 'insensitive' }, city: { equals: city, mode: 'insensitive' } },
-      select: { id: true },
+      select: { id: true, ownerId: true, isOpen: true },
     });
     if (clash) {
+      /* Most often this is the same owner applying twice, not a name conflict.
+         Sending them to email support for their own kitchen is a dead end. */
+      if (clash.ownerId && clash.ownerId === user.userId) {
+        return NextResponse.json({
+          error: clash.isOpen
+            ? `You have already registered "${name}" in ${city}. Manage it from your dashboard.`
+            : `You have already applied for "${name}" in ${city}. We will email you when it is approved.`,
+          goTo: clash.isOpen ? '/dashboard' : '/join/success',
+        }, { status: 409 });
+      }
       return NextResponse.json(
-        { error: `A kitchen called "${name}" is already registered in ${city}. Email tiffingo.app@gmail.com and we'll sort it out.` },
+        { error: `A kitchen called "${name}" is already registered in ${city}. If that is yours, sign in with the account you applied with, or email tiffingo.app@gmail.com and we'll sort it out.` },
         { status: 409 }
       );
     }

@@ -14,6 +14,7 @@ const MARKUP = `<nav id="nav">
     <a href="#how">How it works</a>
     <a href="/explore">Menus</a>
     <a href="#join">For kitchens</a>
+    <a href="/auth/signup?next=/planner">Sign up</a>
   </div>
   <a class="nav-cta" href="/join"><span class="full">Join as a kitchen</span><span class="short">Join</span> <b>&#8594;</b></a>
 </nav>
@@ -45,6 +46,7 @@ const MARKUP = `<nav id="nav">
         </div>
         <div class="actions" id="acts">
           <a class="btn-green" href="/planner">Plan my week <b>&#8594;</b></a>
+          <a class="btn-plain" href="/auth/signup?next=/planner">Create an account</a>
           <span class="price">from <b>$50</b> / week</span>
         </div>
         <div class="chips" id="chips">
@@ -135,7 +137,7 @@ const MARKUP = `<nav id="nav">
   <h2 class="serif">Dinner's <em>already</em> planned.</h2>
   <p>Launching in Surrey. Vancouver next. Your first week is waiting.</p>
   <div class="ctas">
-    <a class="btn-yellow" href="/planner">Plan my week &#8594;</a>
+    <a class="btn-yellow" href="/auth/signup?next=/planner">Join as a customer &#8594;</a>
     <a class="btn-green" href="/join">Join as a kitchen <b>&#8594;</b></a>
   </div>
 </section>
