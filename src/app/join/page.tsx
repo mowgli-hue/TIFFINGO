@@ -110,10 +110,12 @@ export default function JoinPage() {
       });
       if (res.status === 401) { toast.error('Sign in to continue'); router.push('/auth/login?next=/join'); return; }
       const data = await res.json();
-      if (data.meals) {
+      if (data.meals?.length) {
         setMeals(data.meals);
         toast.success('Your weekly meals are ready!');
-      } else throw new Error();
+      } else {
+        toast.error(data.error || 'Generation failed — try again');
+      }
     } catch {
       toast.error('Generation failed — try again');
     } finally {

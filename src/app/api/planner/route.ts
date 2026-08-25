@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAnthropic, AI_MODEL } from '@/lib/ai';
+import { getAnthropic, AI_MODEL, textOf, aiConfigured } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 
 
@@ -15,13 +15,13 @@ export async function POST(req: NextRequest) {
 
   const { message, meals } = await req.json();
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    const fallbacks = [
-      "Done! I've updated your plan. Anything else you'd like to adjust?",
-      "Got it — swapped that meal for a higher protein option.",
-      "Sure! I've added that to your preferences for all future weeks too.",
-    ];
-    return NextResponse.json({ reply: fallbacks[Math.floor(Math.random() * fallbacks.length)] });
+  if (!aiConfigured()) {
+    /* Never answer "Done! I've updated your plan" when nothing was updated.
+       Saying so cost the user their trust the first time they checked. */
+    return NextResponse.json(
+      { error: 'The planner is offline right now. Your plan has not been changed.' },
+      { status: 503 }
+    );
   }
 
   try {
@@ -37,15 +37,18 @@ export async function POST(req: NextRequest) {
 
     const response = await getAnthropic().messages.create({
       model: AI_MODEL,
-      max_tokens: 200,
+      max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],
     });
 
-    const reply = response.content[0].type === 'text' ? response.content[0].text : '';
+    const reply = textOf(response);
     return NextResponse.json({ reply });
-  } catch (error) {
-    console.error('Claude API error:', error);
-    return NextResponse.json({ reply: "Got it! I've noted that preference for your future meal plans." });
+  } catch (error: any) {
+    console.error('[planner]', error?.status ?? '', error?.message ?? error);
+    return NextResponse.json(
+      { error: "That didn't go through — your plan is unchanged. Try again in a moment." },
+      { status: 502 }
+    );
   }
 }

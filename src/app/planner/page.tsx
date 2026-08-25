@@ -30,13 +30,6 @@ const INITIAL_MESSAGE: PlannerMessage = {
   content: "Hi! I've looked at your goals — High protein + Halal only. I've built your first week. Want to tweak anything?",
 };
 
-const AI_REPLIES = [
-  "Done! I've updated your plan. Anything else you'd like to adjust?",
-  "Got it — swapped that meal for a higher protein option. Your weekly average is now 37g protein/meal.",
-  "Sure! I've added that to your preferences for all future weeks too.",
-  "I've noted that. Your Wednesday meals will always be vegetarian from now on.",
-  "Great choice. I've also added more lentil-based meals on Fridays for the extra fibre.",
-];
 
 export default function PlannerPage() {
   const router = useRouter();
@@ -66,12 +59,17 @@ export default function PlannerPage() {
       });
       const data = await res.json();
       setTyping(false);
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply ?? AI_REPLIES[Math.floor(Math.random() * AI_REPLIES.length)] }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.reply ?? data.error ?? "That didn't go through — your plan is unchanged.",
+      }]);
       if (data.updatedMeals) setMeals(data.updatedMeals);
     } catch {
       setTyping(false);
-      const fallback = AI_REPLIES[Math.floor(Math.random() * AI_REPLIES.length)];
-      setMessages(prev => [...prev, { role: 'assistant', content: fallback }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I couldn't reach the planner just then — your plan is unchanged. Try again in a moment.",
+      }]);
     }
   }
 

@@ -1,6 +1,6 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAnthropic, AI_MODEL } from '@/lib/ai';
+import { askJson, AiError } from '@/lib/ai';
 import { getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -20,14 +20,14 @@ export async function POST(req: NextRequest) {
   const menuText = items.map(i => `- ${i.name} ($${i.price})`).join('\n');
 
   try {
-    const r = await getAnthropic().messages.create({
-      model: AI_MODEL,
-      max_tokens: 1600,
+    const plan: any = await askJson({
+      maxTokens: 4000,
       system: `Create a personalized ${days}-day meal plan (Mon-Fri) from ONLY the menu items given. Each day = 2-3 items combined into one meal. Respect diet preference. Vary items across days. Respond ONLY with JSON: {"days":[{"day":"Mon","emoji":"🍛","items":["exact item name","..."],"name":"combo title","description":"1 sentence","calories":550,"protein":"20g"}]}`,
-      messages: [{ role: 'user', content: `Menu:\n${menuText}\n\nDiet: ${diet}. Goal: ${goal}. Days: ${days}.` }],
+      user: `Menu:\n${menuText}\n\nDiet: ${diet}. Goal: ${goal}. Days: ${days}.`,
     });
-    const text = r.content[0].type === 'text' ? r.content[0].text : '';
-    const plan = JSON.parse(text.replace(/```json|```/g, '').trim());
+    if (!Array.isArray(plan?.days) || !plan.days.length) {
+      return NextResponse.json({ error: 'Could not build a plan from that menu.' }, { status: 422 });
+    }
 
     // Price each day = sum of its items, plan total = sum - 15%
     const priceMap = Object.fromEntries(items.map(i => [i.name, Number(i.price)]));
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     });
     const total = +(subtotal * (1 - PLAN_DISCOUNT)).toFixed(2);
     return NextResponse.json({ ...plan, subtotal: +subtotal.toFixed(2), discountPct: PLAN_DISCOUNT * 100, total });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'Generation failed' }, { status: 500 });
+  } catch (e: any) {
+    console.error('[generate-plan]', e instanceof AiError ? e.reason : '', e?.message ?? e);
+    return NextResponse.json({ error: 'Building your plan failed — try again in a moment.' }, { status: 502 });
   }
 }

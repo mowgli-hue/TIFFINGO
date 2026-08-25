@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
   try {
     const response = await getAnthropic().messages.create({
       model: AI_MODEL,
-      max_tokens: 2000,
+      max_tokens: 4000,
       system: SYSTEM,
       messages: [{ role: 'user', content: content as any }],
     });

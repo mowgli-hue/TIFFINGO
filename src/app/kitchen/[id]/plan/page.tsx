@@ -23,8 +23,8 @@ export default function PlanBuilder() {
         body: JSON.stringify({ kitchenId:id, diet, goal }),
       });
       const d = await r.json();
-      if (d.days) setPlan(d); else throw 0;
-    } catch { toast.error('Try again'); }
+      if (d.days) setPlan(d); else toast.error(d.error || 'Could not build a plan — try again');
+    } catch { toast.error('Could not reach the planner — try again'); }
     setBusy(false);
   }
 
