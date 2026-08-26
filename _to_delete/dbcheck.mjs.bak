@@ -1,0 +1,12 @@
+import { PrismaClient } from '@prisma/client';
+const p = new PrismaClient();
+try {
+  const users = await p.user.count();
+  const kitchens = await p.kitchen.count();
+  const byRole = await p.user.groupBy({ by: ['role'], _count: { role: true } });
+  const owned = await p.kitchen.count({ where: { NOT: { ownerId: null } } });
+  const open = await p.kitchen.count({ where: { isOpen: true } });
+  console.log(JSON.stringify({ ok: true, users, kitchens, open, owned, byRole }, null, 2));
+} catch (e) {
+  console.log('FAIL:', e.code || '', e.message.split('\n')[0]);
+} finally { await p.$disconnect(); }

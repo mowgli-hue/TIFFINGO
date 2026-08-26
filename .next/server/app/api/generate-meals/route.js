@@ -1,0 +1,18 @@
+"use strict";(()=>{var e={};e.id=936,e.ids=[936],e.modules={20399:e=>{e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},30517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},57147:e=>{e.exports=require("fs")},13685:e=>{e.exports=require("http")},95687:e=>{e.exports=require("https")},87561:e=>{e.exports=require("node:fs")},84492:e=>{e.exports=require("node:stream")},72477:e=>{e.exports=require("node:stream/web")},71017:e=>{e.exports=require("path")},85477:e=>{e.exports=require("punycode")},12781:e=>{e.exports=require("stream")},57310:e=>{e.exports=require("url")},73837:e=>{e.exports=require("util")},71267:e=>{e.exports=require("worker_threads")},59796:e=>{e.exports=require("zlib")},80669:(e,r,t)=>{t.r(r),t.d(r,{originalPathname:()=>y,patchFetch:()=>f,requestAsyncStorage:()=>g,routeModule:()=>d,serverHooks:()=>x,staticGenerationAsyncStorage:()=>h});var a={};t.r(a),t.d(a,{POST:()=>c,runtime:()=>p});var n=t(49303),o=t(88716),i=t(60670),s=t(87070),u=t(34588);let p="nodejs",l=new u.ZP({apiKey:process.env.ANTHROPIC_API_KEY}),m=`You are TiffinGo's meal designer. Given a restaurant's menu items, create exactly 5 daily meal combos (Monday to Friday) for their weekly TiffinGo calendar.
+
+Rules:
+1. Each combo pairs 2-3 menu items into one satisfying meal (e.g. a drink + a main, or a main + a side)
+2. Variety across the week — don't repeat the same main item twice
+3. Balance the week: mix lighter and heavier days
+4. Name each combo clearly using the actual menu item names
+5. Write an appetizing 1-sentence description for each
+6. Pick an appropriate emoji for each day
+7. Estimate calories and protein per combo realistically
+
+Respond ONLY with valid JSON, no markdown, no backticks, in this exact format:
+{"meals":[{"day":"Mon","emoji":"🫖","name":"Combo name","description":"...","protein":"18g","calories":520,"tags":["Vegetarian"]},...]}`;async function c(e){let{menuItems:r,kitchenName:t,isHalal:a,isVeg:n}=await e.json();if(!r||r.length<3)return s.NextResponse.json({error:"Add at least 3 menu items"},{status:400});let o=r.map(e=>`- ${e.name} ($${e.price})${e.category?` [${e.category}]`:""}`).join("\n"),i=[a&&"Halal",n&&"Vegetarian only"].filter(Boolean).join(", ");try{let e=await l.messages.create({model:"claude-sonnet-4-20250514",max_tokens:1500,system:m,messages:[{role:"user",content:`Restaurant: ${t}${i?` (${i})`:""}
+
+Menu:
+${o}
+
+Create the 5-day meal combo calendar.`}]}),r=("text"===e.content[0].type?e.content[0].text:"").replace(/```json|```/g,"").trim(),a=JSON.parse(r);return s.NextResponse.json(a)}catch(o){console.error("Meal generation error:",o);let e=["\uD83E\uDED6","\uD83C\uDF2F","\uD83C\uDF5B","\uD83C\uDF54","\uD83E\uDD57"],t=["Mon","Tue","Wed","Thu","Fri"].map((t,o)=>{let i=r[o%r.length],s=r[(o+1)%r.length];return{day:t,emoji:e[o],name:`${i.name} + ${s.name}`,description:`A delicious pairing of ${i.name.toLowerCase()} with ${s.name.toLowerCase()}, made fresh daily.`,protein:"20g",calories:550,tags:n?["Vegetarian"]:a?["Halal"]:[]}});return s.NextResponse.json({meals:t})}}let d=new n.AppRouteRouteModule({definition:{kind:o.x.APP_ROUTE,page:"/api/generate-meals/route",pathname:"/api/generate-meals",filename:"route",bundlePath:"app/api/generate-meals/route"},resolvedPagePath:"/Users/junglelabs/Documents/tiffingo/src/app/api/generate-meals/route.ts",nextConfigOutput:"",userland:a}),{requestAsyncStorage:g,staticGenerationAsyncStorage:h,serverHooks:x}=d,y="/api/generate-meals/route";function f(){return(0,i.patchFetch)({serverHooks:x,staticGenerationAsyncStorage:h})}}};var r=require("../../../webpack-runtime.js");r.C(e);var t=e=>r(r.s=e),a=r.X(0,[948,972,588],()=>t(80669));module.exports=a})();
