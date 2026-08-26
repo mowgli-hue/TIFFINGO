@@ -60,8 +60,8 @@ model Kitchen {
   commissionPct   Float          @default(10)
   ownerId         String?
   owner           User?          @relation(fields: [ownerId], references: [id])
-  /* Stripe Connect Express — where this kitchen's 90% lands. payoutsEnabled
-     flips true via webhook once Stripe finishes verifying their details. */
+  // Stripe Connect Express — where this kitchen's 90% lands. payoutsEnabled
+  // flips true via webhook once Stripe finishes verifying their details.
   stripeAccountId String?
   payoutsEnabled  Boolean @default(false)
 
