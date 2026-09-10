@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/store/cart';
 import { toast } from 'react-hot-toast';
+import { apiFetch, setAuthToken } from '@/lib/api-base';
 
 function LoginPageInner() {
   const router = useRouter();
@@ -19,7 +20,7 @@ function LoginPageInner() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/auth', {
+      const res = await apiFetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -27,6 +28,7 @@ function LoginPageInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Login failed');
       setUser(data.user);
+      if (data.token) setAuthToken(data.token);
       toast.success(`Welcome back, ${data.user.name.split(' ')[0]}!`);
       router.push(nextUrl);
     } catch (err: unknown) {

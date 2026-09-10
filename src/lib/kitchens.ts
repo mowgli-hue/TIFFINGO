@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { Kitchen } from '@/lib/types';
 import type { WeekMeal } from '@/lib/mock-data';
+import { apiFetch } from '@/lib/api-base';
 
 /* A kitchen as the API returns it: the Kitchen record plus its weekly meals. */
 export type LiveKitchen = Kitchen & { weeklyMeals: WeekMeal[] };
@@ -42,7 +43,7 @@ export function useKitchens(city = 'Surrey') {
     let live = true;
     setLoading(true);
     setFailed(false);
-    fetch(`/api/kitchens?city=${encodeURIComponent(city)}`)
+    apiFetch(`/api/kitchens?city=${encodeURIComponent(city)}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then(d => { if (live) setKitchens((d.kitchens ?? []).map(normalise)); })
       .catch(() => { if (live) setFailed(true); })
@@ -64,7 +65,7 @@ export function useKitchen(id: string | undefined) {
     let live = true;
     setLoading(true);
     setFailed(false);
-    fetch(`/api/kitchens?id=${encodeURIComponent(id)}`)
+    apiFetch(`/api/kitchens?id=${encodeURIComponent(id)}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then(d => {
         if (!live) return;

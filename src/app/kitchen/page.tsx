@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Heart, Star, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import NavBar from '@/components/NavBar';
@@ -10,8 +10,8 @@ import { useCart } from '@/store/cart';
 import { toast } from 'react-hot-toast';
 import clsx from 'clsx';
 
-export default function KitchenPage() {
-  const { id } = useParams<{ id: string }>();
+function KitchenPageInner() {
+  const id = useSearchParams().get('id') ?? '';
   const router = useRouter();
   const { kitchen, loading, failed } = useKitchen(id);
   const meals = kitchen?.weeklyMeals ?? [];
@@ -80,7 +80,7 @@ export default function KitchenPage() {
 
         {/* Kitchen info */}
       {/* AI Plan Builder entry */}
-      <Link href={`/kitchen/${id}/plan`}>
+      <Link href={`/kitchen/plan?id=${id}`}>
         <div className="rounded-2xl p-4 flex items-center gap-3 mx-5 mt-4" style={{background:'#1A3A2A'}}>
           <span style={{fontSize:18}}>✨</span>
           <div className="flex-1">
@@ -230,5 +230,17 @@ export default function KitchenPage() {
 
       <NavBar />
     </div>
+  );
+}
+
+export default function KitchenPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}>
+        <p className="text-[13px]" style={{ color: '#8A9A8A' }}>Loading…</p>
+      </div>
+    }>
+      <KitchenPageInner />
+    </Suspense>
   );
 }

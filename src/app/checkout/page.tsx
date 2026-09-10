@@ -8,6 +8,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { useKitchen } from '@/lib/kitchens';
 import { DELIVERY_SLOTS } from '@/lib/mock-data';
 import { toast } from 'react-hot-toast';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#043F28', A = '#FEB001', LT = '#FFF8E8', BR = '#E6E3DA';
 
@@ -69,7 +70,7 @@ function CheckoutPage() {
     if (address.trim().length < 10) { toast.error('Add your delivery address first'); return; }
     setStarting(true);
     try {
-      const r = await fetch('/api/payments/intent', {
+      const r = await apiFetch('/api/payments/intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitchenId, type: 'weekly', address: address.trim(), deliverySlot: slot }),

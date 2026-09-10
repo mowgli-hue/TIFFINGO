@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/store/cart';
 import { toast } from 'react-hot-toast';
+import { apiFetch, setAuthToken } from '@/lib/api-base';
 
 function SignupPageInner() {
   const router = useRouter();
@@ -20,7 +21,7 @@ function SignupPageInner() {
     if (form.password.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     setLoading(true);
     try {
-      const res = await fetch('/api/auth?action=signup', {
+      const res = await apiFetch('/api/auth?action=signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -28,6 +29,7 @@ function SignupPageInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Sign up failed');
       setUser(data.user);
+      if (data.token) setAuthToken(data.token);
       toast.success(`Welcome to TiffinGo, ${data.user.name.split(' ')[0]}!`);
       router.push(nextUrl);
     } catch (err: unknown) {

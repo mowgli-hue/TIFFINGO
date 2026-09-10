@@ -6,7 +6,7 @@ import clsx from 'clsx';
 
 export default function KitchenCard({ kitchen }: { kitchen: Kitchen }) {
   return (
-    <Link href={`/kitchen/${kitchen.id}`} className="block">
+    <Link href={`/kitchen?id=${kitchen.id}`} className="block">
       <div className="card overflow-hidden hover:shadow-md transition-shadow duration-200">
         {/* Image / colour header */}
         <div

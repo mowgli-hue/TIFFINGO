@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MapPin, Phone, AlertCircle } from 'lucide-react';
 import NavBar from '@/components/NavBar';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#043F28';
 const A = '#FEB001';
@@ -52,7 +53,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/orders')
+    apiFetch('/api/orders')
       .then(async (r) => {
         if (r.status === 401) { router.push('/auth/login?next=/orders'); return null; }
         const d = await r.json().catch(() => ({}));

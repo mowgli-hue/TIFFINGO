@@ -1,14 +1,15 @@
 'use client';
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Sparkles, RefreshCw, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { apiFetch } from '@/lib/api-base';
 
 const D='#1A3A2A',A='#F0B429',LT='#FFFBEB',BR='#D8DDD0';
 type Day = { day:string; emoji:string; items:string[]; name:string; description:string; calories:number; protein:string; price:number };
 
-export default function PlanBuilder() {
-  const { id } = useParams();
+function PlanBuilderInner() {
+  const id = useSearchParams().get('id') ?? '';
   const router = useRouter();
   const [diet, setDiet] = useState('No preference');
   const [goal, setGoal] = useState('Balanced');
@@ -18,7 +19,7 @@ export default function PlanBuilder() {
   async function generate() {
     setBusy(true);
     try {
-      const r = await fetch('/api/generate-plan', {
+      const r = await apiFetch('/api/generate-plan', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ kitchenId:id, diet, goal }),
       });
@@ -85,5 +86,17 @@ export default function PlanBuilder() {
         </>}
       </div>
     </div>
+  );
+}
+
+export default function PlanBuilder() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F5F0' }}>
+        <p className="text-[13px]" style={{ color: '#8A9A8A' }}>Loading…</p>
+      </div>
+    }>
+      <PlanBuilderInner />
+    </Suspense>
   );
 }

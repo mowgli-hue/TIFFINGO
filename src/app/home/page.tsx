@@ -8,6 +8,7 @@ import NavBar from '@/components/NavBar';
 import KitchenCard from '@/components/KitchenCard';
 import { useKitchens, todaysMeal, LiveKitchen } from '@/lib/kitchens';
 import { useAuth, usePrefs } from '@/store/cart';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#043F28';
 const A = '#FEB001';
@@ -59,7 +60,7 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/orders')
+    apiFetch('/api/orders')
       .then(async (r) => {
         if (r.status === 401) return { orders: [] };
         if (!r.ok) throw new Error('orders');
@@ -67,7 +68,7 @@ export default function HomePage() {
       })
       .then((d) => { if (!cancelled) setOrders(d.orders ?? []); })
       .catch(() => { if (!cancelled) setOrdersFailed(true); });
-    fetch('/api/subscriptions')
+    apiFetch('/api/subscriptions')
       .then((r) => (r.ok ? r.json() : { subscriptions: [] }))
       .then((d) => { if (!cancelled) setSubs(d.subscriptions ?? []); })
       .catch(() => {});
@@ -206,7 +207,7 @@ export default function HomePage() {
             </h2>
             <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-1">
               {today.map(({ kitchen, meal }) => (
-                <Link key={kitchen.id} href={`/kitchen/${kitchen.id}`}
+                <Link key={kitchen.id} href={`/kitchen?id=${kitchen.id}`}
                   className="w-[210px] flex-shrink-0 rounded-2xl bg-white overflow-hidden"
                   style={{ border: `0.5px solid ${BR}` }}>
                   <div className="h-[74px] flex items-center justify-center text-[30px]" style={{ background: LT }}>

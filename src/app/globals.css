@@ -50,3 +50,21 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ---- native shell ----------------------------------------------------
+   The app paints edge to edge under the notch and the home indicator, so
+   fixed furniture has to hold itself clear of them. Zero on the web. */
+body {
+  padding-top: env(safe-area-inset-top);
+  overscroll-behavior-y: none;          /* no rubber-band white gap on iOS */
+  -webkit-tap-highlight-color: transparent;
+}
+
+nav.fixed.bottom-0 {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Text inputs under 16px make iOS zoom the whole page on focus. */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select { font-size: 16px; }
+}

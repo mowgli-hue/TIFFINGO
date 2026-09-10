@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 /* No silent fallback secret. A missing JWT_SECRET in production means every
    session token is signable by anyone who has read the source, so refuse to
@@ -46,9 +46,18 @@ export async function comparePassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
+/* The website authenticates with an http-only cookie. The iOS and Android
+   apps cannot: their pages are served from capacitor:// and file://, so the
+   cookie is cross-site and the webview will not attach it. They send the same
+   signed token as a bearer header instead — same secret, same verification,
+   no SameSite=None loosening of the web session. */
 export function getAuthUser() {
-  const cookieStore = cookies();
-  const token = cookieStore.get('tiffingo_token')?.value;
+  const bearer = headers().get('authorization');
+  if (bearer?.startsWith('Bearer ')) {
+    const fromHeader = verifyToken(bearer.slice(7).trim());
+    if (fromHeader) return fromHeader;
+  }
+  const token = cookies().get(SESSION_COOKIE)?.value;
   if (!token) return null;
   return verifyToken(token);
 }

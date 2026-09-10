@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '@/lib/types';
+import { apiFetch, setAuthToken } from '@/lib/api-base';
 
 interface CartStore {
   kitchenId: string | null;
@@ -58,7 +59,7 @@ export const usePrefs = create<PrefsStore>()(
 interface AuthStore {
   user: User | null;
   setUser: (user: User | null) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuth = create<AuthStore>()(
@@ -67,7 +68,8 @@ export const useAuth = create<AuthStore>()(
       user: null,
       setUser: (user) => set({ user }),
       logout: async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        await apiFetch('/api/auth/logout', { method: 'POST' });
+        setAuthToken(null);
         set({ user: null });
       },
     }),

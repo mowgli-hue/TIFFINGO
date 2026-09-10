@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChefHat, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#1A3A2A', A = '#F0B429', B = '#2D6A4A', C = '#F5F5F0', LT = '#FFFBEB', BR = '#D8DDD0';
 
@@ -48,7 +49,7 @@ export default function DashboardClient() {
   async function load() {
     setReloading(true);
     try {
-      const r = await fetch('/api/merchant/orders', { cache: 'no-store' });
+      const r = await apiFetch('/api/merchant/orders', { cache: 'no-store' });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'Could not load your kitchen');
       setData(d);
@@ -67,7 +68,7 @@ export default function DashboardClient() {
   async function settle(orderId: string, action: 'capture' | 'release') {
     if (action === 'release' && !confirm('Release this hold? The customer will not be charged.')) return;
     try {
-      const r = await fetch('/api/payments/capture', {
+      const r = await apiFetch('/api/payments/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, action }),
@@ -134,7 +135,7 @@ export default function DashboardClient() {
           <button
             onClick={async () => {
               try {
-                const r = await fetch('/api/merchant/stripe-onboard', { method: 'POST' });
+                const r = await apiFetch('/api/merchant/stripe-onboard', { method: 'POST' });
                 const j = await r.json();
                 if (j.url) window.location.href = j.url;
                 else alert(j.error || 'Could not open Stripe onboarding');
@@ -231,7 +232,7 @@ export default function DashboardClient() {
           <section>
             <div className="flex items-center justify-between mb-2.5">
               <h2 className="text-[14px] font-bold" style={{ color: D, fontFamily: 'Fraunces, serif' }}>This week&rsquo;s meals</h2>
-              <Link href={`/kitchen/${k.id}`} className="text-[12px] font-semibold flex items-center gap-0.5" style={{ color: '#C8941A' }}>
+              <Link href={`/kitchen?id=${k.id}`} className="text-[12px] font-semibold flex items-center gap-0.5" style={{ color: '#C8941A' }}>
                 View <ChevronRight size={13} />
               </Link>
             </div>

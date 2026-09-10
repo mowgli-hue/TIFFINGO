@@ -6,6 +6,7 @@ import NavBar from '@/components/NavBar';
 import { CATEGORIES } from '@/lib/mock-data';
 import { useAuth } from '@/store/cart';
 import clsx from 'clsx';
+import { apiFetch } from '@/lib/api-base';
 
 type WeeklyMeal = { id: string; day: string; emoji: string; name: string; description: string; protein: string; calories: number; tags: string[]; };
 type Kitchen = { id: string; name: string; tagline: string; cuisine: string; type: string; city: string; rating: number; reviewCount: number; isOpen: boolean; isHalal: boolean; isVeg: boolean; pricePerMeal: number; weeklyPrice: number; weeklySavingsPct: number; weeklyMeals: WeeklyMeal[]; };
@@ -38,7 +39,7 @@ export default function HomePage() {
   const pastCutoff = hoursLeft === 0;
 
   useEffect(() => {
-    fetch('/api/kitchens?city=Surrey')
+    apiFetch('/api/kitchens?city=Surrey')
       .then(r => r.json())
       .then(d => { setKitchens(d.kitchens ?? []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -129,7 +130,7 @@ export default function HomePage() {
           const meal = getTodayMeal(kitchen.weeklyMeals);
           if (!meal) return null;
           return (
-            <Link key={kitchen.id} href={`/kitchen/${kitchen.id}`}>
+            <Link key={kitchen.id} href={`/kitchen?id=${kitchen.id}`}>
               <div className="bg-white rounded-3xl overflow-hidden border active:scale-[0.99] transition-transform" style={{ borderColor: '#D8DDD0', boxShadow: '0 2px 12px rgba(26,58,42,0.06)' }}>
                 {/* Top stripe */}
                 <div className="h-1" style={{ background: `linear-gradient(90deg, #1A3A2A, #2D6A4A)` }} />

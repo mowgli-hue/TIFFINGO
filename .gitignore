@@ -32,3 +32,6 @@ tsconfig.tsbuildinfo
 .expo/
 coverage/
 _to_delete/
+mobile-out/
+.next-mobile/
+.mobile-stash/

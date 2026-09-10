@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
         select: { id: true, name: true, email: true, phone: true },
       });
       const token = signToken({ userId: user.id, email: user.email });
-      const res = NextResponse.json({ user }, { status: 201 });
+      /* token is also returned in the body for the native apps, which cannot
+         use the cookie — see getAuthUser() in lib/auth.ts */
+      const res = NextResponse.json({ user, token }, { status: 201 });
       res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
       return res;
     } catch {
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
     const valid = await comparePassword(password, user.passwordHash);
     if (!valid) return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     const token = signToken({ userId: user.id, email: user.email });
-    const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, phone: user.phone } });
+    const res = NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, phone: user.phone }, token });
     res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
     return res;
   } catch {

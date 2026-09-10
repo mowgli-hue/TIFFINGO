@@ -8,6 +8,7 @@ import NavBar from '@/components/NavBar';
 import { useKitchens, useKitchen, withDates, todaysMeal, LiveKitchen } from '@/lib/kitchens';
 import { usePrefs } from '@/store/cart';
 import { toast } from 'react-hot-toast';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#043F28', A = '#FEB001', LT = '#FFF8E8', BR = '#E6E3DA';
 
@@ -48,7 +49,7 @@ function MyPlan({ sub, onChanged }: { sub: Sub; onChanged: () => void }) {
     if (action === 'cancel' && !confirm('Cancel this plan? Deliveries stop after this week.')) return;
     setBusy(true);
     try {
-      const r = await fetch('/api/subscriptions', {
+      const r = await apiFetch('/api/subscriptions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: sub.id, action }),
@@ -166,7 +167,7 @@ function Builder({ kitchens }: { kitchens: LiveKitchen[] }) {
     if (!kitchenId) return;
     setBusy(true);
     try {
-      const r = await fetch('/api/generate-plan', {
+      const r = await apiFetch('/api/generate-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitchenId, diet, goal }),
@@ -291,7 +292,7 @@ export default function PlannerPage() {
   const [signedOut, setSignedOut] = useState(false);
 
   function loadSubs() {
-    fetch('/api/subscriptions')
+    apiFetch('/api/subscriptions')
       .then(async (r) => {
         if (r.status === 401) { setSignedOut(true); return { subscriptions: [] }; }
         return r.json();

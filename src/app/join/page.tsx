@@ -5,6 +5,7 @@ import { ChefHat, ArrowRight, Check, Plus, X, Sparkles, RefreshCw, Link2, Clipbo
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/store/cart';
+import { apiFetch } from '@/lib/api-base';
 
 const D = '#1A3A2A', A = '#F0B429', B = '#2D6A4A', LT = '#FFFBEB', BR = '#D8DDD0';
 const STEPS = ['Your kitchen', 'Your menu', 'AI meals', 'Go live'];
@@ -57,7 +58,7 @@ export default function JoinPage() {
     setImporting(true);
     setImportNote('');
     try {
-      const res = await fetch('/api/import-menu', {
+      const res = await apiFetch('/api/import-menu', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -110,7 +111,7 @@ export default function JoinPage() {
     if (validMenu.length < 3) { toast.error('Add at least 3 menu items'); return; }
     setGenerating(true);
     try {
-      const res = await fetch('/api/generate-meals', {
+      const res = await apiFetch('/api/generate-meals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ menuItems: validMenu, kitchenName: form.name, isHalal: form.isHalal, isVeg: form.isVeg, steer: steer.trim() || undefined }),
@@ -133,7 +134,7 @@ export default function JoinPage() {
   async function handleSubmit() {
     setLoading(true);
     try {
-      const res = await fetch('/api/merchant', {
+      const res = await apiFetch('/api/merchant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitchen: form, meals }),
