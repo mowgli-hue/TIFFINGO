@@ -60,7 +60,12 @@ function writeEntry() {
 <title>TiffinGo</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>html,body{margin:0;height:100%;background:#043F28}</style>
-<script>location.replace('./home/');</script>
+<script>
+/* Point at the file, not the directory: directory-index resolution differs
+   between the iOS and Android local servers, and a miss here shows as an
+   app stuck on the splash with no error anywhere. */
+location.replace('./home/index.html');
+</script>
 </head><body></body></html>`
   );
 }

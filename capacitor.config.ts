@@ -17,7 +17,13 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchAutoHide: false,
+      /* Auto-hide is a hard ceiling, not the plan: NativeShell hides the
+         splash the moment React paints, usually well under a second. But
+         launchAutoHide:false means any JS that fails to run leaves the app
+         stuck on the splash forever, which is exactly what happened. */
+      launchAutoHide: true,
+      launchShowDuration: 2500,
+      launchFadeOutDuration: 250,
       backgroundColor: '#043F28',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,

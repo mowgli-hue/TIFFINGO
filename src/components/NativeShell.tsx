@@ -1,53 +1,68 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
-/* Native behaviour the web does not need. Everything is imported lazily and
-   guarded, so the same bundle runs unchanged in a browser where none of these
-   plugins exist. */
+/* Native behaviour the web does not need. Every plugin is imported lazily and
+   guarded, so the identical bundle still runs in a browser where none of them
+   exist. */
 export default function NativeShell() {
-  const router = useRouter();
   const pathname = usePathname();
+
+  /* Hiding the splash is deliberately first, in its own effect, and depends on
+     nothing else. Anything that runs before it is something that can fail and
+     leave the app showing a green rectangle with no way out. */
+  useEffect(() => {
+    let done = false;
+    const hide = async () => {
+      if (done) return;
+      done = true;
+      try {
+        const { SplashScreen } = await import('@capacitor/splash-screen');
+        await SplashScreen.hide();
+      } catch { /* browser, or the plugin is not in this build */ }
+    };
+    hide();
+    /* If the import above is slow, the config's launchAutoHide still ends it. */
+    const t = setTimeout(hide, 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     let removeBack: (() => void) | undefined;
 
     (async () => {
-      const { Capacitor } = await import('@capacitor/core').catch(() => ({ Capacitor: null as any }));
+      let Capacitor: any;
+      try {
+        ({ Capacitor } = await import('@capacitor/core'));
+      } catch {
+        return; /* web build */
+      }
       if (!Capacitor?.isNativePlatform?.()) return;
 
-      /* Dark green status bar over the app's dark green headers. */
       try {
         const { StatusBar, Style } = await import('@capacitor/status-bar');
         await StatusBar.setStyle({ style: Style.Dark });
         if (Capacitor.getPlatform() === 'android') {
           await StatusBar.setBackgroundColor({ color: '#043F28' });
         }
-      } catch { /* plugin not installed in this build */ }
+      } catch { /* plugin absent */ }
 
-      /* Hide the splash only once React has painted — otherwise Android
-         flashes white between the splash and the first screen. */
-      try {
-        const { SplashScreen } = await import('@capacitor/splash-screen');
-        await SplashScreen.hide();
-      } catch { /* no splash plugin */ }
-
-      /* Android hardware back: go back through app history, and exit only
-         from the home screen. Without this, back closes the app from anywhere,
-         which reviewers do notice. */
+      /* Android hardware back: walk app history, exit only from home.
+         Without this, back closes the app from anywhere. */
       try {
         const { App } = await import('@capacitor/app');
         const handle = await App.addListener('backButton', ({ canGoBack }) => {
-          if (canGoBack && window.location.pathname !== '/home/') window.history.back();
+          const atHome = window.location.pathname.replace(/\/index\.html$/, '/') === '/home/';
+          if (canGoBack && !atHome) window.history.back();
           else App.exitApp();
         });
         removeBack = () => { handle.remove(); };
-      } catch { /* no app plugin */ }
+      } catch { /* plugin absent */ }
     })();
 
     return () => { removeBack?.(); };
-  }, [router]);
+  }, []);
 
   /* A light tap when the screen changes — the small thing that separates an
      app from a page. */
