@@ -1,15 +1,46 @@
+# dependencies
 node_modules/
-.expo/
+.pnp
+.pnp.js
+
+# secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# next.js build output
+.next/
+.next-mobile/
+out/
+build/
 dist/
-*.log
-.DS_Store
+mobile-out/
+.mobile-stash/
+
+# native shells — the projects ARE tracked; their generated copies are not
 ios/App/Pods/
 ios/App/App/public/
+ios/App/build/
+ios/DerivedData/
 android/app/src/main/assets/public/
 android/.gradle/
 android/app/build/
 android/build/
 android/local.properties
 android/.idea/
-ios/App/build/
-ios/DerivedData/
+
+# abandoned expo attempt — capacitor replaced it
+app.json
+eas.json
+.expo/
+
+# typescript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# misc
+.DS_Store
+*.log
+.vercel
+coverage/
+_to_delete/
