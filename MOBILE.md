@@ -44,6 +44,17 @@ app stores it and sends it as `Authorization: Bearer …`; `getAuthUser()`
 accepts either. Same secret, same verification — and the web session keeps its
 `SameSite=Lax` cookie untouched.
 
+## A warning about `git status` mid-build
+
+`mobile:build` moves `src/app/api`, `admin`, `dashboard`, `driver` and
+`no-access` into `.mobile-stash` for the length of the build, then puts them
+back. Run `git status` during those ~40 seconds and it reports all of them as
+deleted. They are not — wait for the build to finish and check again.
+
+If a build is ever killed part-way (Ctrl-C, a crash), the script's exit handler
+still restores them. If that ever fails it says so loudly and names the
+directory; `.mobile-stash` is where to look.
+
 ## Before submitting
 
 - [ ] `NEXT_PUBLIC_API_BASE` points at production (defaults to `https://tiffingo.app`)
