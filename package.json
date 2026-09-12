@@ -13,7 +13,8 @@
     "mobile:build": "node scripts/build-mobile.mjs",
     "mobile:sync": "node scripts/build-mobile.mjs && npx cap sync",
     "mobile:ios": "node scripts/build-mobile.mjs && npx cap sync ios && npx cap open ios",
-    "mobile:android": "node scripts/build-mobile.mjs && npx cap sync android && npx cap open android"
+    "mobile:android": "node scripts/build-mobile.mjs && npx cap sync android && npx cap open android",
+    "mobile:assets": "npx capacitor-assets generate"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -44,6 +45,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.12.7",

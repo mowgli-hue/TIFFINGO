@@ -5,7 +5,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
    (Guideline 4.2); an app that ships its own UI and talks to an API over the
    network is an app. Only /api calls leave the device. */
 const config: CapacitorConfig = {
-  appId: 'com.mowglicfd.tiffingo',
+  appId: 'app.tiffingo',
   appName: 'TiffinGo',
   webDir: 'mobile-out',
   ios: {
