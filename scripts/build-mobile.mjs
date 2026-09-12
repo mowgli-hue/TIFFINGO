@@ -39,16 +39,28 @@ function stash() {
   }
 }
 
+/* Removing scratch directories is best-effort. On a restricted filesystem
+   rmdir can fail with EPERM, and an empty leftover folder is not a reason to
+   abort a build that otherwise succeeded. */
+function tryRemove(target) {
+  try { fs.rmSync(target, { recursive: true, force: true }); } catch { /* leave it */ }
+}
+
 function unstash() {
   if (!fs.existsSync(STASH)) return;
   for (const rel of SERVER_ONLY) {
     const from = path.join(STASH, rel.replace(/\//g, '__'));
     if (!fs.existsSync(from)) continue;
     const to = path.join(ROOT, rel);
-    fs.mkdirSync(path.dirname(to), { recursive: true });
-    fs.renameSync(from, to);
+    try {
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.renameSync(from, to);
+    } catch (err) {
+      /* This one matters: the source tree is displaced until it is put back. */
+      console.error(`\n!! could not restore ${rel} — it is in ${STASH}. Move it back by hand.\n`, err);
+    }
   }
-  fs.rmSync(STASH, { recursive: true, force: true });
+  tryRemove(STASH);
 }
 
 /* The marketing landing is the website's front door. The app's front door is
@@ -77,7 +89,7 @@ try {
   console.log('→ moving server-only routes aside');
   stash();
 
-  fs.rmSync(OUT, { recursive: true, force: true });
+  tryRemove(OUT);
 
   console.log(`→ next build (static export, API at ${API_BASE})`);
   execSync('npx next build', {
@@ -97,7 +109,7 @@ if (!exported) {
   process.exit(1);
 }
 fs.cpSync(exported, OUT, { recursive: true });
-fs.rmSync(exported, { recursive: true, force: true });
+tryRemove(exported);
 writeEntry();
 
 const pages = fs.readdirSync(OUT).filter((f) => !f.startsWith('_') && !f.includes('.'));
